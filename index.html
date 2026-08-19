@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Form">
+<meta name="theme-color" content="#F5F1E8">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACeElEQVR4nO3czU0CQQCAUTGW5M0yjB1Yli1YhHeL8uCFRD+ys+6GWXzvTGCY+Rj2J3D6eHm6g9/cX3sAzEscJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQHvZ76se39yUP+3x93m8MR3fdOdxr51j4roYe+d9cfQ53iWN0rPr4aYY53D6OdaPUx7lJ5nDjOP4yPn18m2cOna2QxEESB0kcJHGQ1lwhdVoxswurM3ohdXjnUMZxja7dWBzKOLqhFRyIQxm3Yfk6OiAliYMkDpI4SOIgiYMkDpI4SOIgiYO04+9WVnCFfip2DpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYM01403fx53N9PdRzsHSRwkcZDEQRIHSRwkcZDEQRIHSRykgThc274Ny9dxbOfQx9ENreDw14o+jmt07dbclb3wGvPcUfy3Nvz0OiAliYMkDpI4SOIgbRzHXw6VnSR/m2cOt9851o1PGecmmcNdvlZGR6mMn2aYw72OOZaPVRnl6nN4+nh52uN5uQHOVkjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIH0BjdlZkFaYhQQAAAAASUVORK5CYII=">
+<title>Form — træning & kost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F1E8;
+    --paper: #FFFFFF;
+    --ink: #232320;
+    --ink-soft: #6B6A63;
+    --line: #E1DCCE;
+    --rust: #C1553B;
+    --rust-dark: #8C3A26;
+    --sage: #52684F;
+    --sage-dark: #33422F;
+    --amber: #A6742B;
+    --amber-dark: #6E4C18;
+    --danger: #B23A2E;
+    --radius: 14px;
+    --shadow: 0 1px 0 rgba(35,35,32,0.06);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;}
+  html,body{margin:0; padding:0; background: #DDD6C4; height:100%; overscroll-behavior:none; -webkit-text-size-adjust: 100%;}
+  body{
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    display:flex; justify-content:center;
+    min-height:100vh;
+    -webkit-user-select:none; user-select:none;
+    overscroll-behavior-y: contain;
+  }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
+  .device{
+    width:100%; max-width:430px; min-height:100vh;
+    background: var(--bg);
+    display:flex; flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  header.top{
+    padding: 28px 20px 14px;
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .brand{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: 34px;
+    letter-spacing: 0.5px;
+    line-height:1;
+  }
+  .brand span{ color: var(--rust); }
+  .datepill{
+    font-size:12px; color: var(--ink-soft); font-weight:500;
+    text-transform: capitalize;
+  }
+  .sync-pill{
+    font-size:10px; font-weight:600; margin-top:3px; text-transform:uppercase; letter-spacing:.2px;
+  }
+  .sync-pill.on{ color: var(--sage-dark); }
+  .sync-pill.off{ color: var(--ink-soft); }
+
+  .profile-switch{
+    display:flex; gap:8px; margin: 0 20px 14px;
+  }
+  .profile-switch button{
+    flex:1; border:1px solid var(--line); background: var(--paper); border-radius: var(--radius);
+    padding: 10px 10px; cursor:pointer; text-align:left;
+  }
+  .profile-switch button .pname{ font-size:13px; font-weight:700; color: var(--ink); }
+  .profile-switch button .pmeta{ font-size:11px; color: var(--ink-soft); margin-top:1px; }
+  .profile-switch button.active{ border-color: var(--ink); background: var(--ink); }
+  .profile-switch button.active .pname{ color:#fff; }
+  .profile-switch button.active .pmeta{ color: rgba(255,255,255,0.7); }
+
+  .tabs{
+    display:flex; margin: 0 20px 14px; background: var(--paper);
+    border-radius: 999px; padding:4px; border:1px solid var(--line);
+  }
+  .tab{
+    flex:1; text-align:center; padding:10px 4px; font-size:14px; font-weight:600;
+    border-radius:999px; cursor:pointer; color: var(--ink-soft);
+    transition: background .15s ease, color .15s ease;
+    user-select:none;
+  }
+  .tab.active.training{ background: var(--rust); color:#fff; }
+  .tab.active.diet{ background: var(--sage); color:#fff; }
+
+  .stats-row{
+    display:grid; grid-template-columns: 1fr 1fr; gap:8px;
+    margin: 0 20px 14px;
+  }
+  .stats-row.cols-3{ grid-template-columns: 1fr 1fr 1fr; }
+  .stat-card{
+    background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 10px;
+  }
+  .stat-card .num{ font-family:'Bebas Neue', sans-serif; font-size:24px; line-height:1; }
+  .stat-card.training .num{ color: var(--rust); }
+  .stat-card.diet .num{ color: var(--sage); }
+  .stat-card .lbl{ font-size:10px; color: var(--ink-soft); margin-top:3px; font-weight:600; text-transform:uppercase; letter-spacing:.2px; }
+
+  .profile-card{
+    background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; margin: 0 20px 14px;
+  }
+  .profile-card .ptitle{ font-family:'Bebas Neue', sans-serif; font-size:18px; letter-spacing:.3px; margin-bottom:10px; }
+  .field-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px; }
+  .field{ display:flex; flex-direction:column; gap:4px; }
+  .field label{ font-size:11px; color: var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.3px; }
+  .field input, .field select{
+    border:1px solid var(--line); border-radius:8px; padding:9px 10px;
+    font-size:14px; font-weight:600; font-family:inherit; background:#FBF9F4; color: var(--sage-dark);
+  }
+  .hint{ font-size:12px; color: var(--ink-soft); line-height:1.5; margin-top:2px; }
+
+  .results-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px; }
+  .result-card{ background:#E4EBDF; border-radius:10px; padding:10px 12px; }
+  .result-card .rnum{ font-family:'Bebas Neue', sans-serif; font-size:22px; color: var(--sage-dark); line-height:1; }
+  .result-card .rlbl{ font-size:10px; color: var(--sage-dark); font-weight:600; text-transform:uppercase; letter-spacing:.2px; margin-top:3px; opacity:.85; }
+  .burn-line{ font-size:12px; color: var(--sage-dark); margin-top:10px; font-weight:600; }
+  .guide-line{ font-size:13px; color: var(--ink); line-height:1.6; margin-top:12px; padding:10px 12px; background:#F3E9D6; border-radius:10px; }
+  .disclaimer{ font-size:11px; color: var(--ink-soft); line-height:1.5; margin-top:10px; }
+
+  .seg-wrap{ margin: 0 20px 14px; }
+  .cat-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid var(--line); }
+  .seg-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .cat-tab{
+    flex:0 0 auto; font-size:12px; font-weight:600; padding:7px 12px; border-radius:999px;
+    background:#EFEBE1; color: var(--ink-soft); cursor:pointer; white-space:nowrap;
+  }
+  .cat-tab.training.active{ background: var(--rust); color:#fff; }
+  .cat-tab.diet.active{ background: var(--sage); color:#fff; }
+  .cat-tab.recipes.active{ background: var(--amber); color:#fff; }
+  .seg-wrap .cat-tab{ flex:1; text-align:center; }
+
+  .day-tabs-wrap{ margin: 0 20px 4px; }
+  .day-tabs-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
+  .recipe-cat-wrap{ margin: 0 0 4px; }
+  .recipe-cat-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
+  .day-heading{
+    font-family:'Bebas Neue', sans-serif; font-size:15px; letter-spacing:.3px;
+    color: var(--ink-soft); text-transform:uppercase; margin: 20px 0 8px;
+  }
+  .day-heading:first-of-type{ margin-top:6px; }
+  .day-badge{
+    background:#F6E3DC; color: var(--rust-dark); font-size:11px; font-weight:600;
+    padding:3px 9px; border-radius:999px; border:none; cursor:pointer; margin-top:4px;
+  }
+  .shared-badge{
+    background:#EFEBE1; color: var(--ink-soft); font-size:11px; font-weight:600;
+    padding:3px 9px; border-radius:999px; border:none; cursor:pointer; margin-top:4px;
+  }
+  .shared-badge.active{ background:#E4EBDF; color: var(--sage-dark); }
+  .day-pick-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-bottom:12px; }
+  .day-pick-btn{
+    text-align:center; padding:9px 0; border-radius:8px; border:1px solid var(--line);
+    background:#FBF9F4; font-size:12px; font-weight:600; color: var(--ink-soft); cursor:pointer;
+  }
+  .day-pick-btn.active{ background: var(--rust); color:#fff; border-color: var(--rust); }
+
+  main{ flex:1; padding: 0 20px 100px; }
+
+  .empty{
+    margin-top: 40px; text-align:center; color: var(--ink-soft);
+  }
+  .empty .plate-icon{ margin: 0 auto 14px; opacity:.5; }
+  .empty p{ font-size:14px; line-height:1.5; max-width:260px; margin:6px auto 0; }
+
+  .plan-card{
+    background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px 14px; margin-bottom: 14px; box-shadow: var(--shadow);
+  }
+  .plan-card .row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .plan-card h3{ margin:0; font-size:17px; font-weight:700; }
+  .plan-card .meta{ font-size:12px; color: var(--ink-soft); margin-top:2px; }
+  .stripe{ width:26px; height:4px; border-radius:2px; margin: 10px 0 4px; }
+  .stripe.training{ background: var(--rust); }
+  .stripe.diet{ background: var(--sage); }
+  .stripe.recipes{ background: var(--amber); }
+
+  .chart-wrap{ margin: 6px 0 10px; }
+  .chart-wrap svg text{ font-family:'Inter', sans-serif; }
+
+  .item-line{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:9px 0; border-top:1px solid var(--line); font-size:14px;
+  }
+  .item-line:first-of-type{ border-top:none; }
+  .item-line .name{ font-weight:600; }
+  .item-line .detail{ color: var(--ink-soft); font-size:13px; }
+  .item-line button{
+    background:none; border:none; color:var(--ink-soft); font-size:18px; line-height:1;
+    cursor:pointer; padding:4px 6px; margin-left:6px;
+  }
+  .item-line .amt{ font-weight:600; color: var(--amber-dark); font-size:13px; }
+
+  .icon-btn{
+    background:none; border:none; color: var(--ink-soft); cursor:pointer; padding:4px;
+    font-size:15px;
+  }
+  .icon-btn.del{ color: var(--danger); }
+
+  .add-item-row{
+    display:flex; gap:6px; margin-top: 12px; flex-wrap:wrap;
+  }
+  .add-item-row input{
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px;
+    font-size:13px; font-family:inherit; background:#FBF9F4;
+  }
+  .add-item-row input.iname{ flex:1 1 100px; min-width:90px; }
+  .add-item-row input.idetail{ width:88px; }
+  .add-item-row button.add{
+    border:none; border-radius:8px; padding:0 14px; font-weight:700; font-size:18px;
+    color:#fff; cursor:pointer;
+  }
+  .add-item-row.training button.add{ background: var(--rust); }
+  .add-item-row.diet button.add{ background: var(--sage); }
+  .lib-btn{
+    border:1px dashed var(--line); border-radius:8px; padding:8px 10px; font-size:12px;
+    font-weight:600; background:#FBF9F4; cursor:pointer; color: var(--ink-soft);
+    width:100%; margin-top:6px; text-align:center;
+  }
+  .plan-card.training .lib-btn{ border-color: var(--rust); color: var(--rust-dark); }
+  .plan-card.diet .lib-btn{ border-color: var(--sage); color: var(--sage-dark); }
+  .cardio-btn{ margin-top:8px; }
+  .recipe-add-btn{
+    border:none; border-radius:8px; padding:9px 10px; font-size:12px; font-weight:700;
+    background: var(--amber); color:#fff; cursor:pointer; width:100%; margin-top:10px;
+  }
+  .recipe-link{
+    display:block; text-align:center; font-size:12px; font-weight:600; color: var(--amber-dark);
+    text-decoration:none; margin-top:10px; padding:8px 0; border:1px solid var(--line); border-radius:8px;
+  }
+  .recipe-link:active{ background:#F3E9D6; }
+
+  .badge{
+    display:inline-block; font-size:11px; font-weight:600; padding:3px 9px;
+    border-radius:999px; background:#F3E9D6; color: var(--amber-dark);
+  }
+
+  .fab{
+    position:fixed; bottom: calc(28px + env(safe-area-inset-bottom)); left:50%; transform:translateX(calc(-215px + 20px));
+    max-width:430px;
+  }
+  .fab-inner{
+    position:absolute; right:20px; bottom:0;
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:28px; font-weight:400; cursor:pointer;
+    box-shadow: 0 6px 16px rgba(35,35,32,0.28);
+    border:none;
+  }
+  .fab-inner.training{ background: var(--rust); }
+  .fab-inner.diet{ background: var(--sage); }
+
+  .sheet-backdrop{
+    position:fixed; inset:0; background:rgba(35,35,32,0.4);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index:20;
+  }
+  .sheet{
+    width:100%; max-width:430px; background: var(--paper);
+    border-radius: 20px 20px 0 0; padding: 22px 20px 28px;
+    max-height: 82vh; overflow-y:auto;
+  }
+  .sheet h4{ margin:0 0 14px; font-family:'Bebas Neue', sans-serif; font-size:22px; letter-spacing:.3px;}
+  .sheet input{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:12px;
+    font-size:15px; font-family:inherit; margin-bottom:10px; background:#FBF9F4;
+  }
+  .sheet .actions{ display:flex; gap:10px; margin-top:6px; }
+  .sheet .actions button{
+    flex:1; padding:12px; border-radius:10px; border:none; font-weight:700; font-size:14px; cursor:pointer;
+  }
+  .sheet .cancel{ background:#EFEBE1; color: var(--ink-soft); }
+  .sheet .confirm.training{ background: var(--rust); color:#fff; }
+  .sheet .confirm.diet{ background: var(--sage); color:#fff; }
+  .err{ color: var(--danger); font-size:12px; margin: -4px 0 10px; display:none; }
+
+  .lib-list{ display:flex; flex-direction:column; gap:6px; }
+  .lib-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:11px 12px; border-radius:10px; background:#FBF9F4; border:1px solid var(--line);
+    cursor:pointer; font-size:14px;
+  }
+  .lib-item:active{ transform: scale(0.98); }
+  .lib-item .n{ font-weight:600; }
+  .lib-item .d{ font-size:12px; color: var(--ink-soft); }
+
+  .plate-icon svg{ display:block; }
+</style>
+</head>
+<body>
+<div class="device">
+
+  <header class="top">
+    <div class="brand">FORM<span>.</span></div>
+    <div style="text-align:right;">
+      <div class="datepill" id="datepill"></div>
+      <div class="sync-pill" id="syncPill"></div>
+    </div>
+  </header>
+
+  <div class="profile-switch" id="profileSwitch"></div>
+
+  <div class="tabs">
+    <div class="tab training active" data-tab="training">Træning</div>
+    <div class="tab diet" data-tab="diet">Kost</div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <main id="main"></main>
+
+  <div class="fab" id="fabWrap">
+    <button class="fab-inner training" id="fabBtn" aria-label="Tilføj plan">+</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ---------- Cloud sync (optional) ----------
+// Fill this in with your own free Firebase project's config to sync data
+// live between Glenn's and Birgitte's phones. Leave as-is to keep using
+// on-device storage only (no cross-device sync).
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCV1cGJ0mN00ZSQV7MYTPh3bTIHAIO9wtA",
+  authDomain: "a121277.firebaseapp.com",
+  projectId: "a121277",
+  storageBucket: "a121277.firebasestorage.app",
+  messagingSenderId: "541279701727",
+  appId: "1:541279701727:web:6cae799b176d2965cc376a"
+};
+const cloudEnabled = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== "DIN_API_KEY";
+
+const DAYS = ['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+const DAY_SHORT = ['Man','Tir','Ons','Tor','Fre','Lør','Søn'];
+const RECIPE_CATS = ['Alle','Morgenmad','Frokost','Aftensmad','Snacks','Keto'];
+
+let state = {
+  tab: 'training',
+  trainingDay: 'Alle',
+  dietView: 'plans',
+  recipeCat: 'Alle',
+  activeProfile: 'p1',
+  profiles: {
+    p1: { label: 'Glenn', gender: 'mand', weight: 88, height: 182, age: null, goalWeight: 81 },
+    p2: { label: 'Birgitte', gender: 'kvinde', weight: 68, height: 168, age: null, goalWeight: 68 }
+  },
+  plans: []
+};
+
+// ---------- Preloaded libraries ----------
+const EXERCISE_LIBRARY = {
+  'Bryst': [
+    { name: 'Bænkpres', detail: '4x8' },
+    { name: 'Skråbænk med håndvægte', detail: '3x10' },
+    { name: 'Dips', detail: '3x12' },
+    { name: 'Cross-over i kabel', detail: '3x15' }
+  ],
+  'Ryg': [
+    { name: 'Dødløft', detail: '4x5' },
+    { name: 'Lat pulldown', detail: '4x10' },
+    { name: 'Sæderoning', detail: '3x10' },
+    { name: 'Pull-ups', detail: '3x max' }
+  ],
+  'Ben': [
+    { name: 'Squat', detail: '4x6' },
+    { name: 'Benpres', detail: '4x10' },
+    { name: 'Udfald', detail: '3x12/ben' },
+    { name: 'Rumænsk dødløft', detail: '3x10' }
+  ],
+  'Skuldre': [
+    { name: 'Skulderpres', detail: '4x8' },
+    { name: 'Sidehævninger', detail: '3x15' },
+    { name: 'Front raise', detail: '3x12' }
+  ],
+  'Arme': [
+    { name: 'Biceps curl', detail: '3x12' },
+    { name: 'Triceps pushdown', detail: '3x12' },
+    { name: 'Hammer curl', detail: '3x12' }
+  ],
+  'Core': [
+    { name: 'Planke', detail: '3x60 sek' },
+    { name: 'Cable crunch', detail: '3x15' },
+    { name: 'Hængende benløft', detail: '3x12' }
+  ],
+  'Cardio': [
+    { name: 'Løbetur', detail: '30 min' },
+    { name: 'Intervalløb', detail: '20 min' },
+    { name: 'Cykling', detail: '45 min' },
+    { name: 'Spinning', detail: '40 min' },
+    { name: 'Svømning', detail: '30 min' },
+    { name: 'Romaskine', detail: '20 min' },
+    { name: 'Crosstrainer', detail: '30 min' },
+    { name: 'Rask gåtur', detail: '45 min' }
+  ]
+};
+
+const FOOD_LIBRARY = {
+  'Morgenmad': [
+    { name: 'Havregrød med bær', detail: '380' },
+    { name: 'Æg og rugbrød', detail: '420' },
+    { name: 'Skyr med granola', detail: '310' }
+  ],
+  'Frokost': [
+    { name: 'Kylling og ris', detail: '650' },
+    { name: 'Laks og quinoa', detail: '600' },
+    { name: 'Salat med tun', detail: '450' }
+  ],
+  'Aftensmad': [
+    { name: 'Pasta bolognese', detail: '700' },
+    { name: 'Kylling wok', detail: '580' },
+    { name: 'Bøf og kartofler', detail: '750' }
+  ],
+  'Snacks': [
+    { name: 'Proteinbar', detail: '210' },
+    { name: 'Håndfuld nødder', detail: '190' },
+    { name: 'Frugt', detail: '90' }
+  ]
+};
+
+const REF_WEIGHT = 75;
+const RECIPES = [
+  { name: 'Havregrød med bær', category: 'Morgenmad', kcalBase: 380, ingredients: [
+      { name: 'Havregryn', base: 70, unit: 'g' }, { name: 'Mælk', base: 250, unit: 'ml' },
+      { name: 'Blandede bær', base: 80, unit: 'g' }, { name: 'Honning', base: 10, unit: 'g' } ] },
+  { name: 'Æg og rugbrød', category: 'Morgenmad', kcalBase: 420, ingredients: [
+      { name: 'Æg', base: 3, unit: 'stk' }, { name: 'Rugbrød', base: 60, unit: 'g' }, { name: 'Avocado', base: 50, unit: 'g' } ] },
+  { name: 'Skyr med granola', category: 'Morgenmad', kcalBase: 310, ingredients: [
+      { name: 'Skyr', base: 250, unit: 'g' }, { name: 'Granola', base: 40, unit: 'g' }, { name: 'Blandede bær', base: 50, unit: 'g' } ] },
+  { name: 'Proteinpandekager', category: 'Morgenmad', kcalBase: 450, ingredients: [
+      { name: 'Æg', base: 3, unit: 'stk' }, { name: 'Havregryn', base: 50, unit: 'g' }, { name: 'Banan', base: 1, unit: 'stk' }, { name: 'Skyr', base: 100, unit: 'g' } ] },
+  { name: 'Kylling og ris', category: 'Frokost', kcalBase: 650, ingredients: [
+      { name: 'Kyllingebryst', base: 150, unit: 'g' }, { name: 'Ris (tørvægt)', base: 80, unit: 'g' }, { name: 'Broccoli', base: 100, unit: 'g' }, { name: 'Olivenolie', base: 10, unit: 'g' } ] },
+  { name: 'Laks og quinoa', category: 'Frokost', kcalBase: 600, ingredients: [
+      { name: 'Laks', base: 140, unit: 'g' }, { name: 'Quinoa (tørvægt)', base: 70, unit: 'g' }, { name: 'Spinat', base: 60, unit: 'g' }, { name: 'Citron', base: 0.5, unit: 'stk' } ] },
+  { name: 'Salat med tun', category: 'Frokost', kcalBase: 450, ingredients: [
+      { name: 'Tun i vand', base: 150, unit: 'g' }, { name: 'Blandet salat', base: 100, unit: 'g' }, { name: 'Cherrytomater', base: 80, unit: 'g' }, { name: 'Olivenolie', base: 10, unit: 'g' } ] },
+  { name: 'Falafelbowl', category: 'Frokost', kcalBase: 550, ingredients: [
+      { name: 'Falafel', base: 150, unit: 'g' }, { name: 'Bulgur (tørvægt)', base: 60, unit: 'g' }, { name: 'Agurk', base: 80, unit: 'g' }, { name: 'Hummus', base: 30, unit: 'g' } ] },
+  { name: 'Kylling wok', category: 'Aftensmad', kcalBase: 580, ingredients: [
+      { name: 'Kyllingebryst', base: 160, unit: 'g' }, { name: 'Wokgrøntsager', base: 200, unit: 'g' }, { name: 'Nudler (tørvægt)', base: 70, unit: 'g' }, { name: 'Soyasovs', base: 15, unit: 'ml' } ] },
+  { name: 'Bøf og kartofler', category: 'Aftensmad', kcalBase: 750, ingredients: [
+      { name: 'Okse mørbrad', base: 180, unit: 'g' }, { name: 'Kartofler', base: 250, unit: 'g' }, { name: 'Grønne bønner', base: 100, unit: 'g' }, { name: 'Smør', base: 10, unit: 'g' } ] },
+  { name: 'Pasta bolognese', category: 'Aftensmad', kcalBase: 700, ingredients: [
+      { name: 'Pasta (tørvægt)', base: 90, unit: 'g' }, { name: 'Hakket oksekød', base: 150, unit: 'g' }, { name: 'Tomatsauce', base: 150, unit: 'g' }, { name: 'Parmesan', base: 15, unit: 'g' } ] },
+  { name: 'Fiskefilet med kartofler', category: 'Aftensmad', kcalBase: 500, ingredients: [
+      { name: 'Torskefilet', base: 180, unit: 'g' }, { name: 'Kartofler', base: 250, unit: 'g' }, { name: 'Smør', base: 10, unit: 'g' }, { name: 'Citron', base: 0.5, unit: 'stk' } ] },
+  { name: 'Proteinshake', category: 'Snacks', kcalBase: 350, ingredients: [
+      { name: 'Proteinpulver', base: 30, unit: 'g' }, { name: 'Mælk', base: 300, unit: 'ml' }, { name: 'Banan', base: 1, unit: 'stk' } ] },
+  { name: 'Æggekage snack', category: 'Snacks', kcalBase: 280, ingredients: [
+      { name: 'Æg', base: 2, unit: 'stk' }, { name: 'Skinke', base: 30, unit: 'g' }, { name: 'Ost', base: 20, unit: 'g' } ] }
+];
+
+const KETO_PROTEINS = [
+  { name: 'Kyllingelår', kcal100: 220, amt: 180 }, { name: 'Oksemørbrad', kcal100: 250, amt: 180 },
+  { name: 'Laks', kcal100: 208, amt: 180 }, { name: 'Torsk', kcal100: 82, amt: 200 },
+  { name: 'Bacon', kcal100: 541, amt: 80 }, { name: 'Svinemørbrad', kcal100: 143, amt: 180 },
+  { name: 'Tun', kcal100: 144, amt: 180 }, { name: 'Rejer', kcal100: 99, amt: 200 },
+  { name: 'Lammekølle', kcal100: 294, amt: 160 }, { name: 'Kyllingebryst', kcal100: 165, amt: 180 }
+];
+const KETO_VEG = [
+  { name: 'Broccoli', kcal100: 34, amt: 120 }, { name: 'Spinat', kcal100: 23, amt: 100 },
+  { name: 'Blomkål', kcal100: 25, amt: 150 }, { name: 'Zucchini', kcal100: 17, amt: 150 },
+  { name: 'Avocado', kcal100: 160, amt: 80 }, { name: 'Grønkål', kcal100: 49, amt: 100 },
+  { name: 'Asparges', kcal100: 20, amt: 120 }, { name: 'Peberfrugt', kcal100: 31, amt: 100 },
+  { name: 'Champignon', kcal100: 22, amt: 120 }, { name: 'Rosenkål', kcal100: 43, amt: 120 }
+];
+const KETO_FATS = [
+  { name: 'Smør', kcal100: 717, amt: 20 }, { name: 'Olivenolie', kcal100: 884, amt: 15 },
+  { name: 'Piskefløde', kcal100: 340, amt: 40 }, { name: 'Revet ost', kcal100: 380, amt: 30 },
+  { name: 'Cremefraiche 38%', kcal100: 379, amt: 30 }, { name: 'Hvidløgssmør', kcal100: 700, amt: 20 },
+  { name: 'Bearnaisesauce', kcal100: 470, amt: 30 }, { name: 'Pesto', kcal100: 450, amt: 20 }
+];
+
+function buildKetoRecipes(){
+  const list = [];
+  KETO_PROTEINS.forEach((protein, i) => {
+    KETO_VEG.forEach((veg, j) => {
+      const fat = KETO_FATS[(i + j) % KETO_FATS.length];
+      const kcalBase = Math.round(
+        protein.kcal100 * protein.amt / 100 + veg.kcal100 * veg.amt / 100 + fat.kcal100 * fat.amt / 100
+      );
+      list.push({
+        name: `${protein.name} med ${veg.name}`, category: 'Keto', sub: protein.name, kcalBase,
+        ingredients: [
+          { name: protein.name, base: protein.amt, unit: 'g' },
+          { name: veg.name, base: veg.amt, unit: 'g' },
+          { name: fat.name, base: fat.amt, unit: 'g' }
+        ]
+      });
+    });
+  });
+  return list;
+}
+const ALL_RECIPES = RECIPES.concat(buildKetoRecipes());
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+// Storage priority: cloud (Firestore, if configured) > Claude's built-in
+// storage (only available inside Claude) > the browser's own localStorage.
+const hasClaudeStorage = typeof window.storage !== 'undefined' && window.storage;
+const localFallback = {
+  async get(key){
+    const v = localStorage.getItem('form-app:' + key);
+    return v === null ? null : { key, value: v };
+  },
+  async set(key, value){
+    localStorage.setItem('form-app:' + key, value);
+    return { key, value };
+  }
+};
+
+let store = hasClaudeStorage ? window.storage : localFallback;
+let cloudDocRef = null;
+
+if(cloudEnabled){
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getFirestore(app);
+  cloudDocRef = doc(db, 'form-app', 'shared');
+  store = {
+    async get(key){
+      const snap = await getDoc(cloudDocRef);
+      if(!snap.exists()) return null;
+      const data = snap.data();
+      return data[key] !== undefined ? { key, value: data[key] } : null;
+    },
+    async set(key, value){
+      await setDoc(cloudDocRef, { [key]: value }, { merge: true });
+      return { key, value };
+    }
+  };
+  // Live sync: re-render automatically when the other phone saves a change.
+  onSnapshot(cloudDocRef, () => { loadPlans(); });
+}
+
+async function loadPlans(){
+  try{
+    const res = await store.get('plans');
+    state.plans = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){ state.plans = []; }
+  // migrate legacy plans without an owner to profile 1
+  let migrated = false;
+  state.plans.forEach(p => {
+    if(!p.owner){ p.owner = 'p1'; migrated = true; }
+    if(p.type === 'diet' && p.shared === undefined){
+      p.shared = /aften/i.test(p.name);
+      migrated = true;
+    }
+  });
+
+  try{
+    const res = await store.get('profiles');
+    if(res && res.value){
+      const stored = JSON.parse(res.value);
+      state.profiles.p1 = Object.assign({}, state.profiles.p1, stored.p1);
+      state.profiles.p2 = Object.assign({}, state.profiles.p2, stored.p2);
+    } else {
+      // migrate legacy single-profile storage into p1
+      const legacy = await store.get('profile').catch(()=>null);
+      if(legacy && legacy.value){
+        const lp = JSON.parse(legacy.value);
+        state.profiles.p1 = Object.assign({}, state.profiles.p1, lp, { label: 'Mand', gender: 'mand' });
+        migrated = true;
+      }
+    }
+  }catch(e){}
+
+  if(migrated) savePlans();
+  render();
+}
+async function savePlans(){
+  try{ await store.set('plans', JSON.stringify(state.plans)); }catch(e){}
+}
+async function saveProfiles(){
+  try{ await store.set('profiles', JSON.stringify(state.profiles)); }catch(e){}
+}
+
+function fmtDate(){
+  const d = new Date();
+  document.getElementById('datepill').textContent = d.toLocaleDateString('da-DK', { weekday:'long', day:'numeric', month:'long' });
+  const pill = document.getElementById('syncPill');
+  pill.textContent = cloudEnabled ? 'Sync: fælles' : 'Sync: kun denne enhed';
+  pill.className = 'sync-pill ' + (cloudEnabled ? 'on' : 'off');
+}
+fmtDate();
+
+const plateIcon = `<svg class="plate-icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+  <circle cx="24" cy="24" r="12" stroke="currentColor" stroke-width="2"/>
+</svg>`;
+
+function switchTab(tab){
+  state.tab = tab;
+  document.querySelectorAll('.tabs .tab').forEach(t=> t.classList.toggle('active', t.dataset.tab === tab));
+  render();
+}
+document.querySelectorAll('.tabs .tab').forEach(t=> t.addEventListener('click', ()=> switchTab(t.dataset.tab)));
+
+function goalDateText(key){
+  const p = state.profiles[key];
+  const results = calcProfileResults(p, key);
+  if(results && results.weeksToGoal){
+    const d = new Date();
+    d.setDate(d.getDate() + results.weeksToGoal * 7);
+    return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+  }
+  return null;
+}
+
+function renderProfileSwitch(){
+  const wrap = document.getElementById('profileSwitch');
+  wrap.innerHTML = ['p1','p2'].map(key => {
+    const p = state.profiles[key];
+    const dateText = goalDateText(key);
+    const meta = p.goalWeight ? `Mål: ${p.goalWeight} kg${dateText ? ' · ' + dateText : ''}` : 'Intet mål sat';
+    return `<button class="${state.activeProfile===key?'active':''}" data-profile="${key}">
+      <div class="pname">${escapeHtml(p.label)}</div>
+      <div class="pmeta">${meta}</div>
+    </button>`;
+  }).join('');
+  wrap.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => { state.activeProfile = btn.dataset.profile; render(); });
+  });
+}
+
+function updateFab(){
+  const wrap = document.getElementById('fabWrap');
+  const btn = document.getElementById('fabBtn');
+  if(state.tab === 'training'){
+    wrap.style.display = 'block'; btn.className = 'fab-inner training';
+  } else if(state.tab === 'diet' && state.dietView === 'plans'){
+    wrap.style.display = 'block'; btn.className = 'fab-inner diet';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = String(str);
+  return d.innerHTML;
+}
+function fmtAmount(n){
+  const r = Math.round(n * 10) / 10;
+  return r % 1 === 0 ? String(r) : r.toFixed(1);
+}
+
+function barChart(data, color, opts){
+  opts = opts || {};
+  const maxW = opts.width || 258;
+  const barH = 12, gap = 8, labelW = opts.labelW || 76;
+  const max = Math.max(...data.map(d=>d.value), 1);
+  let y = 2;
+  let bars = '';
+  data.forEach(d=>{
+    const w = Math.max(2, Math.round((d.value/max) * (maxW - labelW - 34)));
+    bars += `<rect x="${labelW}" y="${y}" width="${w}" height="${barH}" rx="3" fill="${color}"/>`;
+    bars += `<text x="${labelW-6}" y="${y+barH-2}" font-size="10" fill="#6B6A63" text-anchor="end">${escapeHtml(d.label)}</text>`;
+    bars += `<text x="${labelW+w+6}" y="${y+barH-2}" font-size="10" fill="#232320" font-weight="600">${d.value}</text>`;
+    y += barH + gap;
+  });
+  const h = y - gap + 2;
+  return `<div class="chart-wrap"><svg width="100%" viewBox="0 0 ${maxW} ${h}" style="overflow:visible; display:block;">${bars}</svg></div>`;
+}
+
+function trainingChart(plan){
+  const counts = {};
+  plan.items.forEach(it=>{
+    const c = it.category || 'Andet';
+    counts[c] = (counts[c]||0) + 1;
+  });
+  const data = Object.keys(counts).map(k=>({label:k, value:counts[k]})).sort((a,b)=>b.value-a.value);
+  if(data.length === 0) return '';
+  return barChart(data, '#C1553B');
+}
+
+function dietChart(plan){
+  if(plan.items.length === 0) return '';
+  const data = plan.items
+    .map(it=>({label: it.name.length>12 ? it.name.slice(0,11)+'…' : it.name, value: Number(it.detail)||0}))
+    .sort((a,b)=>b.value-a.value)
+    .slice(0,6);
+  return barChart(data, '#52684F');
+}
+
+function burnRatePerMin(weight){ return 6 * (weight / 70); } // styrketræning
+const CARDIO_INTENSITY_RATES = { 'Let': 7, 'Moderat': 10, 'Hård': 13 }; // kcal/min ved 70kg
+function cardioRatePerMin(weight, intensity){
+  const base = CARDIO_INTENSITY_RATES[intensity] || CARDIO_INTENSITY_RATES['Moderat'];
+  return base * (weight / 70);
+}
+function parseCardioMinutes(detail){
+  const m = /([\d.]+)\s*min/i.exec(detail || '');
+  return m ? parseFloat(m[1]) : 30; // antager 30 min hvis ikke angivet
+}
+function computePlanBurn(plan, weight){
+  let total = 0;
+  plan.items.forEach(it => {
+    if(it.category === 'Cardio'){
+      const minutes = (it.minutes != null) ? it.minutes : parseCardioMinutes(it.detail);
+      total += minutes * cardioRatePerMin(weight, it.intensity);
+    } else {
+      total += 10 * burnRatePerMin(weight); // ~10 min pr. styrkeøvelse inkl. pauser
+    }
+  });
+  return Math.round(total);
+}
+function estimateTrainingBurnPerDay(weight, ownerKey){
+  const plans = state.plans.filter(p => p.type === 'training' && p.owner === ownerKey);
+  let weeklyBurn = 0;
+  plans.forEach(p => { weeklyBurn += computePlanBurn(p, weight); });
+  return weeklyBurn / 7;
+}
+
+function calcProfileResults(p, ownerKey){
+  if(!p.weight || !p.height) return null;
+  const age = p.age || 30;
+  const bmr = p.gender === 'kvinde'
+    ? 10 * p.weight + 6.25 * p.height - 5 * age - 161
+    : 10 * p.weight + 6.25 * p.height - 5 * age + 5;
+  const baseTdee = bmr * 1.4;
+  const trainingBurn = Math.round(estimateTrainingBurnPerDay(p.weight, ownerKey));
+  const adjustedTdee = Math.round(baseTdee + trainingBurn);
+  const floor = p.gender === 'kvinde' ? 1200 : 1500;
+  let target = adjustedTdee - 500;
+  if (target < floor) target = floor;
+  const bmi = p.weight / Math.pow(p.height / 100, 2);
+  let weeksToGoal = null;
+  if (p.goalWeight && p.goalWeight > 0 && p.goalWeight < p.weight) {
+    weeksToGoal = Math.ceil((p.weight - p.goalWeight) / 0.5);
+  }
+  return { trainingBurn, tdee: adjustedTdee, target, bmi: Math.round(bmi * 10) / 10, weeksToGoal };
+}
+
+function render(){
+  renderProfileSwitch();
+  updateFab();
+  renderStats();
+  const main = document.getElementById('main');
+  if(state.tab === 'training'){
+    renderTrainingTab(main);
+  } else {
+    renderDietTab(main);
+  }
+}
+
+function renderStats(){
+  const row = document.getElementById('statsRow');
+  if(state.tab !== 'training'){ row.className = 'stats-row'; row.innerHTML = ''; return; }
+  row.className = 'stats-row cols-3';
+  const all = state.plans.filter(p => p.type === 'training' && p.owner === state.activeProfile);
+  const plans = state.trainingDay === 'Alle' ? all : all.filter(p => p.day === state.trainingDay);
+  const planCount = plans.length;
+  const exerciseCount = plans.reduce((s,p)=> s + p.items.length, 0);
+  const weight = state.profiles[state.activeProfile].weight;
+  const burnTotal = plans.reduce((s,p)=> s + computePlanBurn(p, weight), 0);
+  row.innerHTML = `
+    <div class="stat-card training"><div class="num">${planCount}</div><div class="lbl">${state.trainingDay==='Alle'?'Planer i alt':'Planer'}</div></div>
+    <div class="stat-card training"><div class="num">${exerciseCount}</div><div class="lbl">Øvelser</div></div>
+    <div class="stat-card training"><div class="num">${burnTotal}</div><div class="lbl">Kcal forbrændt</div></div>
+  `;
+}
+
+function dayTabsHtml(){
+  const tabs = ['Alle', ...DAY_SHORT];
+  return `<div class="day-tabs-wrap"><div class="cat-tabs">` + tabs.map((label, i) => {
+    const value = i === 0 ? 'Alle' : DAYS[i-1];
+    return `<div class="cat-tab training ${state.trainingDay===value?'active':''}" data-day="${value}">${label}</div>`;
+  }).join('') + `</div></div>`;
+}
+
+function renderTrainingTab(main){
+  const all = state.plans.filter(p => p.type === 'training' && p.owner === state.activeProfile);
+
+  let html = dayTabsHtml();
+
+  if(state.trainingDay !== 'Alle'){
+    const plans = all.filter(p => p.day === state.trainingDay);
+    html += plans.length
+      ? plans.map(p => planCardHtml(p)).join('')
+      : `<div class="empty"><div class="plate-icon">${plateIcon}</div><p>Ingen planer om ${state.trainingDay.toLowerCase()} endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en.</p></div>`;
+    main.innerHTML = html;
+    attachPlanListeners(plans);
+  } else {
+    if(all.length === 0){
+      html += `<div class="empty"><div class="plate-icon">${plateIcon}</div><p>Ingen træningsplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette den første og vælg en ugedag.</p></div>`;
+      main.innerHTML = html;
+      return;
+    }
+    let body = '';
+    DAYS.forEach(day => {
+      const dayPlans = all.filter(p => p.day === day);
+      if(dayPlans.length){
+        body += `<div class="day-heading">${day}</div>` + dayPlans.map(p => planCardHtml(p)).join('');
+      }
+    });
+    const unassigned = all.filter(p => !p.day);
+    if(unassigned.length){
+      body += `<div class="day-heading">Ikke tildelt</div>` + unassigned.map(p => planCardHtml(p)).join('');
+    }
+    main.innerHTML = html + body;
+    attachPlanListeners(all);
+  }
+
+  main.querySelectorAll('.day-tabs-wrap .cat-tab').forEach(el => {
+    el.addEventListener('click', () => { state.trainingDay = el.dataset.day; render(); });
+  });
+  main.querySelectorAll('.day-badge').forEach(el => {
+    el.addEventListener('click', () => openDaySheet(el.dataset.plan));
+  });
+}
+
+function guideText(profile, results){
+  if(!results) return '';
+  const name = profile.label;
+  if(results.weeksToGoal){
+    return `${name} sigter mod ${profile.goalWeight} kg fra ${profile.weight} kg — ca. ${results.weeksToGoal} uger med ${results.target} kcal/dag og de træningsplaner, der er lagt ind under ${name}s fane.`;
+  }
+  return `Sæt en målvægt for ${name} for at få en personlig tidslinje til vægttabet.`;
+}
+
+function renderDietTab(main){
+  const key = state.activeProfile;
+  const p = state.profiles[key];
+  const results = calcProfileResults(p, key);
+
+  let html = `
+    <div class="profile-card">
+      <div class="ptitle">${escapeHtml(p.label)}s profil</div>
+      <div class="field-grid">
+        <div class="field">
+          <label>Vægt (kg)</label>
+          <input type="number" inputmode="decimal" id="fWeight" min="30" max="250" step="0.5" value="${p.weight}">
+        </div>
+        <div class="field">
+          <label>Højde (cm)</label>
+          <input type="number" inputmode="numeric" id="fHeight" min="120" max="230" step="1" value="${p.height}">
+        </div>
+        <div class="field">
+          <label>Alder (år)</label>
+          <input type="number" inputmode="numeric" id="fAge" min="14" max="99" step="1" value="${p.age || ''}" placeholder="valgfri">
+        </div>
+        <div class="field">
+          <label>Målvægt (kg)</label>
+          <input type="number" inputmode="decimal" id="fGoal" min="30" max="250" step="0.5" value="${p.goalWeight || ''}" placeholder="valgfri">
+        </div>
+      </div>
+      <div class="hint">Bruges til at skalere opskrifter og beregne et dagligt kaloriemål for ${escapeHtml(p.label.toLowerCase())}s vægttab.</div>
+      ${results ? `
+        <div class="results-grid">
+          <div class="result-card"><div class="rnum">${results.target}</div><div class="rlbl">Kcal-mål/dag</div></div>
+          <div class="result-card"><div class="rnum">${results.tdee}</div><div class="rlbl">Vedligehold/dag</div></div>
+          <div class="result-card"><div class="rnum">${results.bmi}</div><div class="rlbl">BMI</div></div>
+          <div class="result-card"><div class="rnum">${results.weeksToGoal ? results.weeksToGoal + ' uger' : '—'}</div><div class="rlbl">Til målvægt</div></div>
+        </div>
+        <div class="burn-line">${results.trainingBurn > 0 ? `${escapeHtml(p.label)}s træningsplaner lægger ca. ${results.trainingBurn} kcal/dag oven i vedligeholdelsesbehovet.` : `Tilføj træningsplaner under ${escapeHtml(p.label)} på Træning-fanen for at lægge forbruget oven i kaloriemålet.`}</div>
+        <div class="guide-line">${guideText(p, results)}</div>
+        <div class="disclaimer">Skøn baseret på Mifflin-St Jeor-formlen, moderat aktivitetsniveau, den valgte profils styrke- og cardiotræning og et sikkert ugentligt vægttab på ca. 0,5 kg pr. person. Ikke medicinsk rådgivning — tal med en læge eller diætist ved større vægttab.</div>
+      ` : ''}
+    </div>
+
+    <div class="seg-wrap">
+      <div class="cat-tabs">
+        <div class="cat-tab diet ${state.dietView==='plans'?'active':''}" data-view="plans">Mine planer</div>
+        <div class="cat-tab diet ${state.dietView==='recipes'?'active':''}" data-view="recipes">Opskrifter</div>
+      </div>
+    </div>
+  `;
+
+  main.innerHTML = html;
+
+  const commit = () => {
+    const w = Number(document.getElementById('fWeight').value);
+    const h = Number(document.getElementById('fHeight').value);
+    const a = Number(document.getElementById('fAge').value);
+    const g = Number(document.getElementById('fGoal').value);
+    const prof = state.profiles[key];
+    if(w > 0) prof.weight = w;
+    if(h > 0) prof.height = h;
+    prof.age = a > 0 ? a : null;
+    prof.goalWeight = g > 0 ? g : null;
+    saveProfiles();
+    render();
+  };
+  ['fWeight','fHeight','fAge','fGoal'].forEach(id => {
+    document.getElementById(id).addEventListener('change', commit);
+  });
+  main.querySelectorAll('.seg-wrap .cat-tab').forEach(btn => {
+    btn.addEventListener('click', () => { state.dietView = btn.dataset.view; render(); });
+  });
+
+  const contentWrap = document.createElement('div');
+  main.appendChild(contentWrap);
+  if(state.dietView === 'plans'){
+    renderDietPlans(contentWrap);
+  } else {
+    renderRecipes(contentWrap);
+  }
+}
+
+function renderDietPlans(container){
+  const plans = state.plans.filter(p => p.type === 'diet' && (p.owner === state.activeProfile || p.shared));
+  if(plans.length === 0){
+    container.innerHTML = `
+      <div class="empty">
+        <div class="plate-icon">${plateIcon}</div>
+        <p>Ingen kostplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en, eller tilføj en ret direkte fra Opskrifter.</p>
+      </div>`;
+    return;
+  }
+  container.innerHTML = plans.map(p => planCardHtml(p)).join('');
+  attachPlanListeners(plans);
+}
+
+function attachPlanListeners(plans){
+  plans.forEach(p => {
+    const addBtn = document.getElementById('addbtn-' + p.id);
+    const nameInput = document.getElementById('name-' + p.id);
+    const detailInput = document.getElementById('detail-' + p.id);
+    if(addBtn) addBtn.addEventListener('click', () => addItem(p.id, nameInput, detailInput));
+    [nameInput, detailInput].forEach(inp => {
+      if(inp) inp.addEventListener('keydown', e => { if(e.key === 'Enter') addItem(p.id, nameInput, detailInput); });
+    });
+    const libBtn = document.getElementById('libbtn-' + p.id);
+    if(libBtn) libBtn.addEventListener('click', () => openLibrarySheet(p.id));
+    const cardioBtn = document.getElementById('cardiobtn-' + p.id);
+    if(cardioBtn) cardioBtn.addEventListener('click', () => openCardioSheet(p.id));
+    document.querySelectorAll(`.del-plan-${p.id}`).forEach(b=> b.addEventListener('click', ()=> deletePlan(p.id)));
+    document.querySelectorAll(`[data-del-item][data-plan="${p.id}"]`).forEach(b=>
+      b.addEventListener('click', ()=> deleteItem(p.id, b.dataset.delItem)));
+    const dayBadge = document.getElementById('daybadge-' + p.id);
+    if(dayBadge) dayBadge.addEventListener('click', () => openDaySheet(p.id));
+    const sharedBadge = document.getElementById('sharedbadge-' + p.id);
+    if(sharedBadge) sharedBadge.addEventListener('click', () => toggleShared(p.id));
+  });
+}
+
+function toggleShared(planId){
+  const plan = state.plans.find(p => p.id === planId);
+  plan.shared = !plan.shared;
+  savePlans();
+  render();
+}
+
+function renderRecipes(container){
+  const weight = state.profiles[state.activeProfile].weight;
+  const factor = weight / REF_WEIGHT;
+  const filtered = state.recipeCat === 'Alle' ? ALL_RECIPES : ALL_RECIPES.filter(r => r.category === state.recipeCat);
+
+  const catTabsHtml = `<div class="recipe-cat-wrap"><div class="cat-tabs">` + RECIPE_CATS.map(c =>
+    `<div class="cat-tab recipes ${state.recipeCat===c?'active':''}" data-rcat="${c}">${c}${c==='Keto' ? ' (100)' : ''}</div>`
+  ).join('') + `</div></div>`;
+
+  const cardsHtml = filtered.map((r) => {
+    const idx = ALL_RECIPES.indexOf(r);
+    const kcal = Math.round(r.kcalBase * factor);
+    const ingHtml = r.ingredients.map(ing => `
+      <div class="item-line">
+        <div class="name">${escapeHtml(ing.name)}</div>
+        <div class="amt">${fmtAmount(ing.base * factor)} ${escapeHtml(ing.unit)}</div>
+      </div>`).join('');
+    return `
+      <div class="plan-card recipes">
+        <div class="row">
+          <div>
+            <h3>${escapeHtml(r.name)}</h3>
+            <div class="meta"><span class="badge">${escapeHtml(r.category)}</span>${r.sub ? ' &nbsp;·&nbsp; '+escapeHtml(r.sub) : ''} &nbsp; ~${kcal} kcal</div>
+          </div>
+        </div>
+        <div class="stripe recipes"></div>
+        ${ingHtml}
+        <a class="recipe-link" href="https://www.google.com/search?q=${encodeURIComponent(r.name + ' opskrift')}" target="_blank" rel="noopener">Find opskriften på nettet ↗</a>
+        <button class="recipe-add-btn" data-recipe-idx="${idx}">Tilføj til kostplan</button>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = catTabsHtml + (cardsHtml || `<div class="empty"><p>Ingen opskrifter i denne kategori.</p></div>`);
+
+  container.querySelectorAll('.recipe-cat-wrap .cat-tab').forEach(el => {
+    el.addEventListener('click', () => { state.recipeCat = el.dataset.rcat; render(); });
+  });
+  container.querySelectorAll('.recipe-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const r = ALL_RECIPES[Number(btn.dataset.recipeIdx)];
+      const kcal = Math.round(r.kcalBase * factor);
+      openAddRecipeSheet(r, kcal);
+    });
+  });
+}
+
+function openAddRecipeSheet(recipe, kcal){
+  const dietPlans = state.plans.filter(p => p.type === 'diet' && (p.owner === state.activeProfile || p.shared));
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+
+  const listHtml = dietPlans.length
+    ? `<div class="lib-list" id="recipePlanList">` + dietPlans.map(p => `
+        <div class="lib-item" data-plan-id="${p.id}">
+          <span class="n">${escapeHtml(p.name)}</span>
+          <span class="d">${p.items.length} måltider</span>
+        </div>`).join('') + `</div>`
+    : `<p class="hint" style="margin-bottom:10px;">Ingen kostplaner endnu for ${escapeHtml(state.profiles[state.activeProfile].label)} — opret en herunder.</p>`;
+
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>Tilføj "${escapeHtml(recipe.name)}"</h4>
+      ${listHtml}
+      <input id="recipeNewPlanName" placeholder="Ny kostplan, fx Hverdagsmenu">
+      <div class="actions">
+        <button class="cancel" id="cancelRecipeSheet">Luk</button>
+        <button class="confirm diet" id="confirmRecipeSheet">Opret & tilføj</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+  document.getElementById('cancelRecipeSheet').addEventListener('click', () => backdrop.remove());
+
+  backdrop.querySelectorAll('.lib-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const plan = state.plans.find(p => p.id === el.dataset.planId);
+      plan.items.push({ id: uid(), name: recipe.name, detail: String(kcal), category: recipe.category });
+      savePlans();
+      backdrop.remove();
+      render();
+    });
+  });
+
+  document.getElementById('confirmRecipeSheet').addEventListener('click', () => {
+    const nameInput = document.getElementById('recipeNewPlanName');
+    const name = nameInput.value.trim();
+    if(!name){ nameInput.focus(); return; }
+    const plan = { id: uid(), type: 'diet', name, items: [], owner: state.activeProfile, shared: /aften/i.test(name) };
+    plan.items.push({ id: uid(), name: recipe.name, detail: String(kcal), category: recipe.category });
+    state.plans.push(plan);
+    savePlans();
+    backdrop.remove();
+    render();
+  });
+}
+
+function planCardHtml(p){
+  const isTraining = p.type === 'training';
+  const weight = state.profiles[p.owner] ? state.profiles[p.owner].weight : state.profiles[state.activeProfile].weight;
+  const detailPlaceholder = isTraining ? 'fx 4x8' : 'kcal';
+  const chart = isTraining ? trainingChart(p) : dietChart(p);
+  const itemsHtml = p.items.length
+    ? p.items.map(it => `
+      <div class="item-line">
+        <div>
+          <div class="name">${escapeHtml(it.name)}</div>
+          <div class="detail">${isTraining ? escapeHtml(it.detail||'') : (it.detail ? escapeHtml(it.detail)+' kcal' : '')}</div>
+        </div>
+        <button data-del-item="${it.id}" data-plan="${p.id}" aria-label="Fjern">×</button>
+      </div>`).join('')
+    : `<div class="detail" style="padding:6px 0 2px;">Ingen ${isTraining ? 'øvelser' : 'måltider'} tilføjet endnu.</div>`;
+
+  const dayBadgeHtml = isTraining
+    ? `<button class="day-badge" id="daybadge-${p.id}" data-plan="${p.id}">${p.day ? escapeHtml(p.day) : 'Sæt ugedag'}</button>`
+    : `<button class="shared-badge ${p.shared?'active':''}" id="sharedbadge-${p.id}" data-plan="${p.id}">${p.shared ? 'Fælles for begge' : 'Kun ' + escapeHtml(state.profiles[p.owner] ? state.profiles[p.owner].label : '')}</button>`;
+
+  const burnText = isTraining && p.items.length
+    ? ` · ~${computePlanBurn(p, weight)} kcal forbrændt`
+    : '';
+
+  return `
+    <div class="plan-card ${p.type}">
+      <div class="row">
+        <div>
+          <h3>${escapeHtml(p.name)}</h3>
+          <div class="meta">${p.items.length} ${isTraining ? (p.items.length===1?'øvelse':'øvelser') : (p.items.length===1?'måltid':'måltider')}${burnText}</div>
+          ${dayBadgeHtml}
+        </div>
+        <button class="icon-btn del del-plan-${p.id}" aria-label="Slet plan">✕</button>
+      </div>
+      <div class="stripe ${p.type}"></div>
+      ${chart}
+      ${itemsHtml}
+      <div class="add-item-row ${p.type}">
+        <input class="iname" id="name-${p.id}" placeholder="${isTraining ? 'Øvelse' : 'Måltid'}">
+        <input class="idetail" id="detail-${p.id}" placeholder="${detailPlaceholder}" ${isTraining?'':'inputmode="numeric"'}>
+        <button class="add" id="addbtn-${p.id}" aria-label="Tilføj">+</button>
+      </div>
+      <button class="lib-btn" id="libbtn-${p.id}">Vælg fra bibliotek</button>
+      ${isTraining ? `<button class="lib-btn cardio-btn" id="cardiobtn-${p.id}">Tilføj cardio</button>` : ''}
+    </div>`;
+}
+
+function addItem(planId, nameInput, detailInput, category){
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  const plan = state.plans.find(p => p.id === planId);
+  plan.items.push({ id: uid(), name, detail: detailInput.value.trim(), category: category || null });
+  nameInput.value = ''; detailInput.value = '';
+  savePlans();
+  render();
+}
+
+function deleteItem(planId, itemId){
+  const plan = state.plans.find(p => p.id === planId);
+  plan.items = plan.items.filter(it => it.id !== itemId);
+  savePlans();
+  render();
+}
+
+function deletePlan(planId){
+  state.plans = state.plans.filter(p => p.id !== planId);
+  savePlans();
+  render();
+}
+
+document.getElementById('fabBtn').addEventListener('click', () => openNewPlanSheet());
+
+function openNewPlanSheet(){
+  const tab = state.tab;
+  let selectedDay = state.trainingDay !== 'Alle' ? state.trainingDay : null;
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+  const dayPickerHtml = tab === 'training' ? `
+    <div class="field" style="margin-bottom:2px;">
+      <label>Ugedag (valgfri)</label>
+    </div>
+    <div class="day-pick-grid" id="dayPickGrid">
+      ${DAYS.map(d => `<div class="day-pick-btn ${selectedDay===d?'active':''}" data-day="${d}">${d.slice(0,3)}</div>`).join('')}
+    </div>` : '';
+
+  let sharedSelected = false;
+  const sharedPickerHtml = tab === 'diet' ? `
+    <div class="field" style="margin-bottom:2px;">
+      <label>Synlighed</label>
+    </div>
+    <div class="day-pick-grid" style="grid-template-columns: 1fr 1fr;" id="sharedPickGrid">
+      <div class="day-pick-btn active" data-shared="0">Kun ${escapeHtml(state.profiles[state.activeProfile].label)}</div>
+      <div class="day-pick-btn" data-shared="1">Fælles for begge</div>
+    </div>` : '';
+
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>Ny ${tab === 'training' ? 'træningsplan' : 'kostplan'} — ${escapeHtml(state.profiles[state.activeProfile].label)}</h4>
+      <input id="newPlanName" placeholder="${tab === 'training' ? 'fx Overkrop A' : 'fx Hverdagsmenu'}">
+      <div class="err" id="newPlanErr">Skriv et navn til planen først.</div>
+      ${dayPickerHtml}
+      ${sharedPickerHtml}
+      <div class="actions">
+        <button class="cancel" id="cancelSheet">Annuller</button>
+        <button class="confirm ${tab}" id="confirmSheet">Opret plan</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  const input = document.getElementById('newPlanName');
+  input.focus();
+  document.getElementById('cancelSheet').addEventListener('click', () => backdrop.remove());
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+
+  if(tab === 'training'){
+    backdrop.querySelectorAll('.day-pick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedDay = (selectedDay === btn.dataset.day) ? null : btn.dataset.day;
+        backdrop.querySelectorAll('.day-pick-btn').forEach(b => b.classList.toggle('active', b.dataset.day === selectedDay));
+      });
+    });
+  }
+  if(tab === 'diet'){
+    backdrop.querySelectorAll('#sharedPickGrid .day-pick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sharedSelected = btn.dataset.shared === '1';
+        backdrop.querySelectorAll('#sharedPickGrid .day-pick-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+  }
+
+  const confirm = () => {
+    const name = input.value.trim();
+    const err = document.getElementById('newPlanErr');
+    if(!name){ err.style.display = 'block'; input.focus(); return; }
+    const plan = { id: uid(), type: tab, name, items: [], owner: state.activeProfile };
+    if(tab === 'training') plan.day = selectedDay;
+    if(tab === 'diet') plan.shared = sharedSelected;
+    state.plans.push(plan);
+    savePlans();
+    backdrop.remove();
+    render();
+  };
+  document.getElementById('confirmSheet').addEventListener('click', confirm);
+  input.addEventListener('keydown', e => { if(e.key === 'Enter') confirm(); });
+}
+
+function openDaySheet(planId){
+  const plan = state.plans.find(p => p.id === planId);
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>Vælg ugedag</h4>
+      <div class="day-pick-grid">
+        ${DAYS.map(d => `<div class="day-pick-btn ${plan.day===d?'active':''}" data-day="${d}">${d.slice(0,3)}</div>`).join('')}
+      </div>
+      <div class="actions">
+        <button class="cancel" id="clearDay">Ingen dag</button>
+        <button class="confirm training" id="closeDaySheet">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+  document.getElementById('closeDaySheet').addEventListener('click', () => backdrop.remove());
+  document.getElementById('clearDay').addEventListener('click', () => {
+    plan.day = null; savePlans(); backdrop.remove(); render();
+  });
+  backdrop.querySelectorAll('.day-pick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      plan.day = btn.dataset.day;
+      savePlans();
+      backdrop.remove();
+      render();
+    });
+  });
+}
+
+function openCardioSheet(planId){
+  const plan = state.plans.find(p => p.id === planId);
+  let intensity = 'Moderat';
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>Tilføj cardio</h4>
+      <input id="cardioName" placeholder="fx Løbetur, cykling, svømning">
+      <div class="err" id="cardioErr">Skriv et navn til aktiviteten først.</div>
+      <div class="field" style="margin-bottom:6px;">
+        <label>Varighed (minutter)</label>
+        <input type="number" inputmode="numeric" id="cardioMinutes" min="5" max="240" step="5" value="30">
+      </div>
+      <div class="field" style="margin-bottom:2px;">
+        <label>Styrke / intensitet</label>
+      </div>
+      <div class="day-pick-grid" style="grid-template-columns: repeat(3, 1fr);" id="intensityGrid">
+        <div class="day-pick-btn" data-intensity="Let">Let</div>
+        <div class="day-pick-btn active" data-intensity="Moderat">Moderat</div>
+        <div class="day-pick-btn" data-intensity="Hård">Hård</div>
+      </div>
+      <div class="actions">
+        <button class="cancel" id="cancelCardio">Annuller</button>
+        <button class="confirm training" id="confirmCardio">Tilføj</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  const nameInput = document.getElementById('cardioName');
+  nameInput.focus();
+  document.getElementById('cancelCardio').addEventListener('click', () => backdrop.remove());
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+
+  backdrop.querySelectorAll('#intensityGrid .day-pick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      intensity = btn.dataset.intensity;
+      backdrop.querySelectorAll('#intensityGrid .day-pick-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  const confirm = () => {
+    const name = nameInput.value.trim();
+    const minutesInput = document.getElementById('cardioMinutes');
+    const minutes = Number(minutesInput.value) || 30;
+    if(!name){ document.getElementById('cardioErr').style.display = 'block'; nameInput.focus(); return; }
+    plan.items.push({
+      id: uid(), name, category: 'Cardio', minutes, intensity,
+      detail: `${minutes} min · ${intensity}`
+    });
+    savePlans();
+    backdrop.remove();
+    render();
+  };
+  document.getElementById('confirmCardio').addEventListener('click', confirm);
+  nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') confirm(); });
+}
+
+function openLibrarySheet(planId){
+  const plan = state.plans.find(p => p.id === planId);
+  const lib = plan.type === 'training' ? EXERCISE_LIBRARY : FOOD_LIBRARY;
+  const cats = Object.keys(lib);
+  let activeCat = cats[0];
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>${plan.type === 'training' ? 'Vælg øvelse' : 'Vælg måltid'}</h4>
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="lib-list" id="libList"></div>
+      <div class="actions">
+        <button class="cancel" id="cancelLib">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+  document.getElementById('cancelLib').addEventListener('click', () => backdrop.remove());
+
+  function renderCatTabs(){
+    document.getElementById('catTabs').innerHTML = cats.map(c =>
+      `<div class="cat-tab ${plan.type} ${c===activeCat?'active':''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</div>`
+    ).join('');
+    document.querySelectorAll('#catTabs .cat-tab').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeCat = el.dataset.cat; renderCatTabs(); renderList(); });
+    });
+  }
+
+  function renderList(){
+    const items = lib[activeCat];
+    document.getElementById('libList').innerHTML = items.map((it, idx) => `
+      <div class="lib-item" data-idx="${idx}">
+        <span class="n">${escapeHtml(it.name)}</span>
+        <span class="d">${plan.type==='training' ? escapeHtml(it.detail) : escapeHtml(it.detail)+' kcal'}</span>
+      </div>`).join('');
+    document.querySelectorAll('#libList .lib-item').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const it = items[el.dataset.idx];
+        plan.items.push({ id: uid(), name: it.name, detail: it.detail, category: activeCat });
+        savePlans();
+        backdrop.remove();
+        render();
+      });
+    });
+  }
+
+  renderCatTabs();
+  renderList();
+}
+
+loadPlans();
+</script>
+</body>
+</html>
