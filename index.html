@@ -1022,15 +1022,17 @@ function openLogEntrySheet(dateISO){
     dayPlans.forEach(plan => {
       plan.items.forEach(it => {
         if(it.category === 'Cardio') return;
+        const histEntry = (it.weightHistory || []).find(h => h.date === dateISO);
+        const prefill = histEntry ? histEntry.weight : '';
         rows += `<div class="weight-edit-row" data-plan-id="${plan.id}" data-item-id="${it.id}">
           <span class="we-name">${escapeHtml(it.name)}</span>
-          <input class="we-input" type="number" inputmode="decimal" placeholder="kg" value="${escapeHtml(it.weight || '')}">
+          <input class="we-input" type="number" inputmode="decimal" placeholder="${escapeHtml(it.weight || 'kg')}" value="${escapeHtml(prefill)}">
         </div>`;
       });
     });
     if(!rows) return '';
     return `
-      <div class="hint" style="margin:14px 0 6px;">Ret vægt for styrkeøvelser denne dag:</div>
+      <div class="hint" style="margin:14px 0 6px;">Ret vægt for styrkeøvelser denne dag (tomt felt ændrer intet):</div>
       <div class="weight-edit-list">${rows}</div>
       <button class="lib-btn" id="saveWeightsBtn" style="margin-top:8px;">Gem vægte</button>`;
   }
