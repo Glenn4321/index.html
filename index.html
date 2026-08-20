@@ -167,11 +167,21 @@
   .log-dot.future{ opacity:.4; cursor:default; }
   .log-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .log-count{ font-size:12px; color: var(--ink-soft); font-weight:600; }
-  .log-btn{
-    border:none; border-radius:999px; padding:9px 14px; font-size:12px; font-weight:700;
-    background: var(--rust); color:#fff; cursor:pointer; white-space:nowrap;
+  .log-existing{
+    font-size:14px; color: var(--ink); background:#F3EFE5; border-radius:10px;
+    padding:12px; margin-bottom:14px;
   }
-  .log-btn.done{ background: var(--sage); }
+  .log-entries{ margin-bottom:12px; }
+  .log-entry-line{
+    display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--line);
+    font-size:13px; cursor:pointer;
+  }
+  .log-entry-line:first-child{ border-top:none; }
+  .le-day{
+    flex:0 0 30px; font-weight:700; color:#fff; background: var(--rust); border-radius:6px;
+    text-align:center; font-size:10px; padding:3px 0;
+  }
+  .le-label{ font-weight:600; color: var(--ink); }
   .day-tabs-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
   .recipe-cat-wrap{ margin: 0 0 4px; }
   .recipe-cat-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
@@ -325,6 +335,8 @@
     cursor:pointer; font-size:14px;
   }
   .lib-item:active{ transform: scale(0.98); }
+  .lib-item.selectable.selected{ background: var(--rust); border-color: var(--rust); color:#fff; }
+  .lib-item.selectable.selected .d{ color: rgba(255,255,255,0.8); }
   .lib-item .n{ font-weight:600; }
   .lib-item .d{ font-size:12px; color: var(--ink-soft); }
 
@@ -617,6 +629,13 @@ async function loadPlans(){
     }
   }catch(e){}
 
+  // migrate legacy log entries that were plain date strings into {date, label}
+  ['p1','p2'].forEach(key => {
+    state.trainingLog[key] = (state.trainingLog[key] || []).map(e =>
+      typeof e === 'string' ? { date: e, label: 'Trænet' } : e
+    );
+  });
+
   if(migrated) savePlans();
   render();
 }
@@ -818,8 +837,12 @@ function addPlanRowHtml(accent, label){
 // ---------- Training log (dage I faktisk har trænet) ----------
 function todayISO(){ return new Date().toISOString().slice(0, 10); }
 
+// Each entry: { date: 'YYYY-MM-DD', label: 'Overkrop A' }
+function getLogEntry(dateISO, ownerKey){
+  return (state.trainingLog[ownerKey] || []).find(e => e.date === dateISO);
+}
 function isTrainedOn(dateISO, ownerKey){
-  return (state.trainingLog[ownerKey] || []).includes(dateISO);
+  return !!getLogEntry(dateISO, ownerKey);
 }
 
 function getWeekDates(offset){
@@ -838,23 +861,123 @@ function getWeekDates(offset){
   return dates;
 }
 
-function toggleTrainedDate(dateISO){
+function setLogEntry(dateISO, label){
   const key = state.activeProfile;
   if(!state.trainingLog[key]) state.trainingLog[key] = [];
-  const log = state.trainingLog[key];
-  const idx = log.indexOf(dateISO);
-  if(idx >= 0){ log.splice(idx, 1); } else { log.push(dateISO); }
+  state.trainingLog[key] = state.trainingLog[key].filter(e => e.date !== dateISO);
+  state.trainingLog[key].push({ date: dateISO, label });
   saveTrainingLog();
   render();
 }
 
-function toggleTrainedToday(){
-  toggleTrainedDate(todayISO());
+function removeLogEntry(dateISO){
+  const key = state.activeProfile;
+  state.trainingLog[key] = (state.trainingLog[key] || []).filter(e => e.date !== dateISO);
+  saveTrainingLog();
+  render();
 }
 
 function fmtShortDate(dateISO){
   const d = new Date(dateISO + 'T00:00:00');
   return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+}
+function fmtFullDate(dateISO){
+  const d = new Date(dateISO + 'T00:00:00');
+  return d.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+function isoWeekdayName(dateISO){
+  const d = new Date(dateISO + 'T00:00:00');
+  const jsDay = d.getDay(); // 0 = søndag
+  const idx = (jsDay === 0) ? 6 : jsDay - 1;
+  return DAYS[idx];
+}
+
+function openLogEntrySheet(dateISO){
+  const key = state.activeProfile;
+  const existing = getLogEntry(dateISO, key);
+  const plans = state.plans.filter(p => p.type === 'training' && p.owner === key);
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sheet-backdrop';
+
+  const existingLabels = existing ? existing.label.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const selected = new Set(existingLabels);
+
+  const existingActionsHtml = existing ? `
+    <div class="actions">
+      <button class="cancel" id="removeLogBtn">Fjern hele markeringen</button>
+    </div>` : '';
+
+  const planListHtml = plans.length ? `
+    <div class="lib-list" id="logPlanList">` + plans.map(p => `
+      <div class="lib-item selectable ${selected.has(p.name) ? 'selected' : ''}" data-plan-name="${escapeHtml(p.name)}">
+        <span class="n">${escapeHtml(p.name)}</span>
+        <span class="d">${p.items.length} øvelser</span>
+      </div>`).join('') + `</div>` : '';
+
+  const weekdayForHint = isoWeekdayName(dateISO);
+  const hasDayPlan = plans.some(p => p.day === weekdayForHint);
+  const customHint = hasDayPlan
+    ? `Skrives den ind som cardio i den plan, der ligger på ${weekdayForHint.toLowerCase()}:`
+    : `Eller skriv selv, fx Løbetur (der er ingen plan sat til ${weekdayForHint.toLowerCase()}, så det gemmes kun i kalenderen):`;
+
+  backdrop.innerHTML = `
+    <div class="sheet">
+      <h4>${fmtFullDate(dateISO)}</h4>
+      ${existing ? `<div class="log-existing">Trænet: <strong id="selectedSummary">${escapeHtml(existing.label)}</strong></div>` : ''}
+      ${existingActionsHtml}
+      ${plans.length ? '<div class="hint" style="margin-bottom:8px;">Vælg en eller flere planer, I trænede:</div>' + planListHtml : ''}
+      <div class="hint" style="margin: ${plans.length ? '10px' : '0'} 0 6px;">${customHint}</div>
+      <input id="logCustomLabel" placeholder="fx Løbetur">
+      <div class="actions">
+        <button class="cancel" id="cancelLogSheet">${existing ? 'Luk' : 'Annuller'}</button>
+        <button class="confirm training" id="confirmLogSheet">Gem</button>
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e) => { if(e.target === backdrop) backdrop.remove(); });
+
+  const removeBtn = document.getElementById('removeLogBtn');
+  if(removeBtn) removeBtn.addEventListener('click', () => { removeLogEntry(dateISO); backdrop.remove(); });
+
+  const cancelBtn = document.getElementById('cancelLogSheet');
+  if(cancelBtn) cancelBtn.addEventListener('click', () => backdrop.remove());
+
+  backdrop.querySelectorAll('.lib-item.selectable').forEach(el => {
+    el.addEventListener('click', () => {
+      const name = el.dataset.planName;
+      if(selected.has(name)){ selected.delete(name); el.classList.remove('selected'); }
+      else { selected.add(name); el.classList.add('selected'); }
+    });
+  });
+
+  const confirmBtn = document.getElementById('confirmLogSheet');
+  if(confirmBtn){
+    confirmBtn.addEventListener('click', () => {
+      const input = document.getElementById('logCustomLabel');
+      const customLabel = input.value.trim();
+      const parts = Array.from(selected);
+      if(customLabel) parts.push(customLabel);
+      if(parts.length === 0){ input.focus(); return; }
+
+      // Selvskrevet tekst lægges ind som en rigtig cardio-linje i dagens plan, hvis der er en.
+      if(customLabel){
+        const weekday = isoWeekdayName(dateISO);
+        const dayPlan = state.plans.find(p => p.type === 'training' && p.owner === key && p.day === weekday);
+        if(dayPlan){
+          dayPlan.items.push({
+            id: uid(), name: customLabel, category: 'Cardio', minutes: 30, intensity: 'Moderat',
+            detail: '30 min · Moderat'
+          });
+          savePlans();
+        }
+      }
+
+      setLogEntry(dateISO, parts.join(', '));
+      backdrop.remove();
+    });
+  }
 }
 
 function trainingLogCardHtml(){
@@ -862,7 +985,6 @@ function trainingLogCardHtml(){
   const offset = state.logWeekOffset || 0;
   const weekDates = getWeekDates(offset);
   const today = todayISO();
-  const trainedToday = isTrainedOn(today, key);
   const count = weekDates.filter(d => isTrainedOn(d, key)).length;
   const dots = weekDates.map((d, i) => {
     const trained = isTrainedOn(d, key);
@@ -871,6 +993,14 @@ function trainingLogCardHtml(){
     return `<button class="log-dot ${trained ? 'done' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''}" data-log-date="${d}" ${isFuture ? 'disabled' : ''}>${DAY_SHORT[i]}</button>`;
   }).join('');
   const weekLabel = offset === 0 ? 'Denne uge' : `${fmtShortDate(weekDates[0])} – ${fmtShortDate(weekDates[6])}`;
+
+  const entryLines = weekDates.map((d, i) => {
+    const entry = getLogEntry(d, key);
+    if(!entry) return '';
+    return `<div class="log-entry-line" data-log-date="${d}"><span class="le-day">${DAY_SHORT[i]}</span><span class="le-label">${escapeHtml(entry.label)}</span></div>`;
+  }).join('');
+  const entriesHtml = entryLines ? `<div class="log-entries">${entryLines}</div>` : '';
+
   return `
     <div class="log-card">
       <div class="log-nav">
@@ -879,12 +1009,13 @@ function trainingLogCardHtml(){
         <button class="log-nav-btn" id="logWeekNext" aria-label="N\u00e6ste uge" ${offset >= 0 ? 'disabled' : ''}>›</button>
       </div>
       <div class="log-dots">${dots}</div>
+      ${entriesHtml}
       <div class="log-row">
         <div class="log-count">${count} af 7 dage trænet</div>
-        <button class="log-btn ${trainedToday ? 'done' : ''}" id="logTodayBtn">${trainedToday ? '✓ Trænet i dag' : 'Jeg har trænet i dag'}</button>
       </div>
     </div>`;
 }
+
 
 function dayTabsHtml(){
   const tabs = ['Alle', ...DAY_SHORT];
@@ -1048,10 +1179,8 @@ function attachEmptyAddButton(){
   document.querySelectorAll('[data-add-plan]').forEach(btn => {
     btn.addEventListener('click', () => openNewPlanSheet());
   });
-  const logBtn = document.getElementById('logTodayBtn');
-  if(logBtn) logBtn.addEventListener('click', () => toggleTrainedToday());
   document.querySelectorAll('[data-log-date]').forEach(btn => {
-    btn.addEventListener('click', () => toggleTrainedDate(btn.dataset.logDate));
+    btn.addEventListener('click', () => openLogEntrySheet(btn.dataset.logDate));
   });
   const prevBtn = document.getElementById('logWeekPrev');
   if(prevBtn) prevBtn.addEventListener('click', () => { state.logWeekOffset = (state.logWeekOffset || 0) - 1; render(); });
