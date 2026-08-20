@@ -30,7 +30,7 @@
     --shadow: 0 1px 0 rgba(35,35,32,0.06);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;}
-  html,body{margin:0; padding:0; background: #DDD6C4; height:100%; overscroll-behavior:none; -webkit-text-size-adjust: 100%;}
+  html,body{margin:0; padding:0; background: #DDD6C4; height:100%; overscroll-behavior:none; -webkit-text-size-adjust: 100%; overflow-x:hidden; width:100%;}
   body{
     font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--ink);
@@ -176,6 +176,16 @@
   }
   .empty .plate-icon{ margin: 0 auto 14px; opacity:.5; }
   .empty p{ font-size:14px; line-height:1.5; max-width:260px; margin:6px auto 0; }
+  .empty-add-btn{
+    width:56px; height:56px; border-radius:50%; padding:0; margin:20px auto 0;
+    display:block; text-align:center; line-height:56px;
+    -webkit-appearance:none; appearance:none; -webkit-tap-highlight-color:transparent;
+    color:#fff; font-size:32px; font-weight:300; font-family:inherit; cursor:pointer;
+    box-shadow: 0 6px 16px rgba(35,35,32,0.28);
+    border:none; outline:none;
+  }
+  .empty-add-btn.training{ background: var(--rust); }
+  .empty-add-btn.diet{ background: var(--sage); }
 
   .plan-card{
     background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
@@ -250,16 +260,18 @@
   }
 
   .fab{
-    position:fixed; bottom: calc(28px + env(safe-area-inset-bottom)); left:50%; transform:translateX(calc(-215px + 20px));
-    max-width:430px;
+    position:fixed;
+    right: calc(20px + max(0px, (100vw - 430px) / 2));
+    bottom: calc(28px + env(safe-area-inset-bottom));
+    z-index: 15;
   }
   .fab-inner{
-    position:absolute; right:20px; bottom:0;
-    width:56px; height:56px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:28px; font-weight:400; cursor:pointer;
+    width:56px; height:56px; border-radius:50%; padding:0; margin:0;
+    display:block; text-align:center; line-height:56px;
+    -webkit-appearance:none; appearance:none; -webkit-tap-highlight-color:transparent;
+    color:#fff; font-size:32px; font-weight:300; font-family:inherit; cursor:pointer;
     box-shadow: 0 6px 16px rgba(35,35,32,0.28);
-    border:none;
+    border:none; outline:none;
   }
   .fab-inner.training{ background: var(--rust); }
   .fab-inner.diet{ background: var(--sage); }
@@ -776,6 +788,14 @@ function renderStats(){
   `;
 }
 
+function emptyStateHtml(message, accent){
+  return `<div class="empty">
+    <div class="plate-icon">${plateIcon}</div>
+    <p>${message}</p>
+    <button class="empty-add-btn ${accent}" data-empty-add="1">+</button>
+  </div>`;
+}
+
 function dayTabsHtml(){
   const tabs = ['Alle', ...DAY_SHORT];
   return `<div class="day-tabs-wrap"><div class="cat-tabs">` + tabs.map((label, i) => {
@@ -793,13 +813,17 @@ function renderTrainingTab(main){
     const plans = all.filter(p => p.day === state.trainingDay);
     html += plans.length
       ? plans.map(p => planCardHtml(p)).join('')
-      : `<div class="empty"><div class="plate-icon">${plateIcon}</div><p>Ingen planer om ${state.trainingDay.toLowerCase()} endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en.</p></div>`;
+      : emptyStateHtml(`Ingen planer om ${state.trainingDay.toLowerCase()} endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en.`, 'training');
     main.innerHTML = html;
     attachPlanListeners(plans);
   } else {
     if(all.length === 0){
-      html += `<div class="empty"><div class="plate-icon">${plateIcon}</div><p>Ingen træningsplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette den første og vælg en ugedag.</p></div>`;
+      html += emptyStateHtml(`Ingen træningsplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette den første og vælg en ugedag.`, 'training');
       main.innerHTML = html;
+      main.querySelectorAll('.day-tabs-wrap .cat-tab').forEach(el => {
+        el.addEventListener('click', () => { state.trainingDay = el.dataset.day; render(); });
+      });
+      attachEmptyAddButton();
       return;
     }
     let body = '';
@@ -823,6 +847,7 @@ function renderTrainingTab(main){
   main.querySelectorAll('.day-badge').forEach(el => {
     el.addEventListener('click', () => openDaySheet(el.dataset.plan));
   });
+  attachEmptyAddButton();
 }
 
 function guideText(profile, results){
@@ -916,15 +941,18 @@ function renderDietTab(main){
 function renderDietPlans(container){
   const plans = state.plans.filter(p => p.type === 'diet' && (p.owner === state.activeProfile || p.shared));
   if(plans.length === 0){
-    container.innerHTML = `
-      <div class="empty">
-        <div class="plate-icon">${plateIcon}</div>
-        <p>Ingen kostplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en, eller tilføj en ret direkte fra Opskrifter.</p>
-      </div>`;
+    container.innerHTML = emptyStateHtml(`Ingen kostplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en, eller tilføj en ret direkte fra Opskrifter.`, 'diet');
+    attachEmptyAddButton();
     return;
   }
   container.innerHTML = plans.map(p => planCardHtml(p)).join('');
   attachPlanListeners(plans);
+}
+
+function attachEmptyAddButton(){
+  document.querySelectorAll('[data-empty-add]').forEach(btn => {
+    btn.addEventListener('click', () => openNewPlanSheet());
+  });
 }
 
 function attachPlanListeners(plans){
