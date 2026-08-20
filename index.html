@@ -169,7 +169,7 @@
   }
   .day-pick-btn.active{ background: var(--rust); color:#fff; border-color: var(--rust); }
 
-  main{ flex:1; padding: 0 20px 100px; }
+  main{ flex:1; padding: 0 20px calc(30px + env(safe-area-inset-bottom)); }
 
   .empty{
     margin-top: 40px; text-align:center; color: var(--ink-soft);
@@ -259,22 +259,13 @@
     border-radius:999px; background:#F3E9D6; color: var(--amber-dark);
   }
 
-  .fab{
-    position:fixed;
-    right: calc(20px + max(0px, (100vw - 430px) / 2));
-    bottom: calc(28px + env(safe-area-inset-bottom));
-    z-index: 15;
+  .add-plan-row{
+    display:block; width:100%; margin-top:8px; padding:14px 0; border-radius: var(--radius);
+    border:1px dashed var(--line); background: var(--paper); text-align:center;
+    font-size:14px; font-weight:700; cursor:pointer;
   }
-  .fab-inner{
-    width:56px; height:56px; border-radius:50%; padding:0; margin:0;
-    display:block; text-align:center; line-height:56px;
-    -webkit-appearance:none; appearance:none; -webkit-tap-highlight-color:transparent;
-    color:#fff; font-size:32px; font-weight:300; font-family:inherit; cursor:pointer;
-    box-shadow: 0 6px 16px rgba(35,35,32,0.28);
-    border:none; outline:none;
-  }
-  .fab-inner.training{ background: var(--rust); }
-  .fab-inner.diet{ background: var(--sage); }
+  .add-plan-row.training{ color: var(--rust-dark); border-color: var(--rust); }
+  .add-plan-row.diet{ color: var(--sage-dark); border-color: var(--sage); }
 
   .sheet-backdrop{
     position:fixed; inset:0; background:rgba(35,35,32,0.4);
@@ -334,10 +325,6 @@
   <div class="stats-row" id="statsRow"></div>
 
   <main id="main"></main>
-
-  <div class="fab" id="fabWrap">
-    <button class="fab-inner training" id="fabBtn" aria-label="Tilføj plan">+</button>
-  </div>
 </div>
 
 <script type="module">
@@ -650,18 +637,6 @@ function renderProfileSwitch(){
   });
 }
 
-function updateFab(){
-  const wrap = document.getElementById('fabWrap');
-  const btn = document.getElementById('fabBtn');
-  if(state.tab === 'training'){
-    wrap.style.display = 'block'; btn.className = 'fab-inner training';
-  } else if(state.tab === 'diet' && state.dietView === 'plans'){
-    wrap.style.display = 'block'; btn.className = 'fab-inner diet';
-  } else {
-    wrap.style.display = 'none';
-  }
-}
-
 function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = String(str);
@@ -761,7 +736,6 @@ function calcProfileResults(p, ownerKey){
 
 function render(){
   renderProfileSwitch();
-  updateFab();
   renderStats();
   const main = document.getElementById('main');
   if(state.tab === 'training'){
@@ -796,6 +770,10 @@ function emptyStateHtml(message, accent){
   </div>`;
 }
 
+function addPlanRowHtml(accent, label){
+  return `<button class="add-plan-row ${accent}" data-add-plan="1">+ ${label}</button>`;
+}
+
 function dayTabsHtml(){
   const tabs = ['Alle', ...DAY_SHORT];
   return `<div class="day-tabs-wrap"><div class="cat-tabs">` + tabs.map((label, i) => {
@@ -812,7 +790,7 @@ function renderTrainingTab(main){
   if(state.trainingDay !== 'Alle'){
     const plans = all.filter(p => p.day === state.trainingDay);
     html += plans.length
-      ? plans.map(p => planCardHtml(p)).join('')
+      ? plans.map(p => planCardHtml(p)).join('') + addPlanRowHtml('training', 'Ny plan')
       : emptyStateHtml(`Ingen planer om ${state.trainingDay.toLowerCase()} endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette en.`, 'training');
     main.innerHTML = html;
     attachPlanListeners(plans);
@@ -837,6 +815,7 @@ function renderTrainingTab(main){
     if(unassigned.length){
       body += `<div class="day-heading">Ikke tildelt</div>` + unassigned.map(p => planCardHtml(p)).join('');
     }
+    body += addPlanRowHtml('training', 'Ny plan');
     main.innerHTML = html + body;
     attachPlanListeners(all);
   }
@@ -945,12 +924,16 @@ function renderDietPlans(container){
     attachEmptyAddButton();
     return;
   }
-  container.innerHTML = plans.map(p => planCardHtml(p)).join('');
+  container.innerHTML = plans.map(p => planCardHtml(p)).join('') + addPlanRowHtml('diet', 'Ny kostplan');
   attachPlanListeners(plans);
+  attachEmptyAddButton();
 }
 
 function attachEmptyAddButton(){
   document.querySelectorAll('[data-empty-add]').forEach(btn => {
+    btn.addEventListener('click', () => openNewPlanSheet());
+  });
+  document.querySelectorAll('[data-add-plan]').forEach(btn => {
     btn.addEventListener('click', () => openNewPlanSheet());
   });
 }
@@ -1151,7 +1134,6 @@ function deletePlan(planId){
   render();
 }
 
-document.getElementById('fabBtn').addEventListener('click', () => openNewPlanSheet());
 
 function openNewPlanSheet(){
   const tab = state.tab;
