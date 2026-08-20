@@ -145,6 +145,33 @@
   .seg-wrap .cat-tab{ flex:1; text-align:center; }
 
   .day-tabs-wrap{ margin: 0 20px 4px; }
+  .log-card{
+    background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 14px 16px; margin: 0 20px 14px;
+  }
+  .log-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .log-nav-btn{
+    border:none; background:#F3EFE5; color: var(--ink-soft); width:28px; height:28px;
+    border-radius:50%; font-size:16px; font-weight:700; cursor:pointer; line-height:1;
+  }
+  .log-nav-btn:disabled{ opacity:.35; cursor:default; }
+  .log-week-label{ font-size:12px; font-weight:700; color: var(--ink-soft); text-transform:uppercase; letter-spacing:.3px; }
+  .log-dots{ display:flex; justify-content:space-between; gap:6px; margin-bottom:12px; }
+  .log-dot{
+    flex:1; text-align:center; font-size:10px; font-weight:700; color: var(--ink-soft);
+    padding:8px 0 6px; border-radius:10px; background:#F3EFE5; border:none; cursor:pointer;
+    font-family:inherit;
+  }
+  .log-dot.done{ background: var(--rust); color:#fff; }
+  .log-dot.today{ box-shadow: inset 0 0 0 2px var(--ink); }
+  .log-dot.future{ opacity:.4; cursor:default; }
+  .log-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .log-count{ font-size:12px; color: var(--ink-soft); font-weight:600; }
+  .log-btn{
+    border:none; border-radius:999px; padding:9px 14px; font-size:12px; font-weight:700;
+    background: var(--rust); color:#fff; cursor:pointer; white-space:nowrap;
+  }
+  .log-btn.done{ background: var(--sage); }
   .day-tabs-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
   .recipe-cat-wrap{ margin: 0 0 4px; }
   .recipe-cat-wrap .cat-tabs{ border-bottom:none; margin-bottom:0; padding-bottom:2px; }
@@ -359,7 +386,9 @@ let state = {
     p1: { label: 'Glenn', gender: 'mand', weight: 88, height: 182, age: null, goalWeight: 81 },
     p2: { label: 'Birgitte', gender: 'kvinde', weight: 68, height: 168, age: null, goalWeight: 68 }
   },
-  plans: []
+  plans: [],
+  trainingLog: { p1: [], p2: [] },
+  logWeekOffset: 0
 };
 
 // ---------- Preloaded libraries ----------
@@ -579,6 +608,15 @@ async function loadPlans(){
     }
   }catch(e){}
 
+  try{
+    const res = await store.get('trainingLog');
+    if(res && res.value){
+      const stored = JSON.parse(res.value);
+      state.trainingLog.p1 = stored.p1 || [];
+      state.trainingLog.p2 = stored.p2 || [];
+    }
+  }catch(e){}
+
   if(migrated) savePlans();
   render();
 }
@@ -587,6 +625,9 @@ async function savePlans(){
 }
 async function saveProfiles(){
   try{ await store.set('profiles', JSON.stringify(state.profiles)); }catch(e){}
+}
+async function saveTrainingLog(){
+  try{ await store.set('trainingLog', JSON.stringify(state.trainingLog)); }catch(e){}
 }
 
 function fmtDate(){
@@ -774,6 +815,77 @@ function addPlanRowHtml(accent, label){
   return `<button class="add-plan-row ${accent}" data-add-plan="1">+ ${label}</button>`;
 }
 
+// ---------- Training log (dage I faktisk har trænet) ----------
+function todayISO(){ return new Date().toISOString().slice(0, 10); }
+
+function isTrainedOn(dateISO, ownerKey){
+  return (state.trainingLog[ownerKey] || []).includes(dateISO);
+}
+
+function getWeekDates(offset){
+  offset = offset || 0;
+  const now = new Date();
+  const jsDay = now.getDay(); // 0 = søndag
+  const diffToMonday = (jsDay === 0) ? -6 : 1 - jsDay;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() + diffToMonday + offset * 7);
+  const dates = [];
+  for(let i = 0; i < 7; i++){
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function toggleTrainedDate(dateISO){
+  const key = state.activeProfile;
+  if(!state.trainingLog[key]) state.trainingLog[key] = [];
+  const log = state.trainingLog[key];
+  const idx = log.indexOf(dateISO);
+  if(idx >= 0){ log.splice(idx, 1); } else { log.push(dateISO); }
+  saveTrainingLog();
+  render();
+}
+
+function toggleTrainedToday(){
+  toggleTrainedDate(todayISO());
+}
+
+function fmtShortDate(dateISO){
+  const d = new Date(dateISO + 'T00:00:00');
+  return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+}
+
+function trainingLogCardHtml(){
+  const key = state.activeProfile;
+  const offset = state.logWeekOffset || 0;
+  const weekDates = getWeekDates(offset);
+  const today = todayISO();
+  const trainedToday = isTrainedOn(today, key);
+  const count = weekDates.filter(d => isTrainedOn(d, key)).length;
+  const dots = weekDates.map((d, i) => {
+    const trained = isTrainedOn(d, key);
+    const isToday = d === today;
+    const isFuture = d > today;
+    return `<button class="log-dot ${trained ? 'done' : ''} ${isToday ? 'today' : ''} ${isFuture ? 'future' : ''}" data-log-date="${d}" ${isFuture ? 'disabled' : ''}>${DAY_SHORT[i]}</button>`;
+  }).join('');
+  const weekLabel = offset === 0 ? 'Denne uge' : `${fmtShortDate(weekDates[0])} – ${fmtShortDate(weekDates[6])}`;
+  return `
+    <div class="log-card">
+      <div class="log-nav">
+        <button class="log-nav-btn" id="logWeekPrev" aria-label="Forrige uge">‹</button>
+        <div class="log-week-label">${weekLabel}</div>
+        <button class="log-nav-btn" id="logWeekNext" aria-label="N\u00e6ste uge" ${offset >= 0 ? 'disabled' : ''}>›</button>
+      </div>
+      <div class="log-dots">${dots}</div>
+      <div class="log-row">
+        <div class="log-count">${count} af 7 dage trænet</div>
+        <button class="log-btn ${trainedToday ? 'done' : ''}" id="logTodayBtn">${trainedToday ? '✓ Trænet i dag' : 'Jeg har trænet i dag'}</button>
+      </div>
+    </div>`;
+}
+
 function dayTabsHtml(){
   const tabs = ['Alle', ...DAY_SHORT];
   return `<div class="day-tabs-wrap"><div class="cat-tabs">` + tabs.map((label, i) => {
@@ -785,7 +897,7 @@ function dayTabsHtml(){
 function renderTrainingTab(main){
   const all = state.plans.filter(p => p.type === 'training' && p.owner === state.activeProfile);
 
-  let html = dayTabsHtml();
+  let html = trainingLogCardHtml() + dayTabsHtml();
 
   if(state.trainingDay !== 'Alle'){
     const plans = all.filter(p => p.day === state.trainingDay);
@@ -936,6 +1048,15 @@ function attachEmptyAddButton(){
   document.querySelectorAll('[data-add-plan]').forEach(btn => {
     btn.addEventListener('click', () => openNewPlanSheet());
   });
+  const logBtn = document.getElementById('logTodayBtn');
+  if(logBtn) logBtn.addEventListener('click', () => toggleTrainedToday());
+  document.querySelectorAll('[data-log-date]').forEach(btn => {
+    btn.addEventListener('click', () => toggleTrainedDate(btn.dataset.logDate));
+  });
+  const prevBtn = document.getElementById('logWeekPrev');
+  if(prevBtn) prevBtn.addEventListener('click', () => { state.logWeekOffset = (state.logWeekOffset || 0) - 1; render(); });
+  const nextBtn = document.getElementById('logWeekNext');
+  if(nextBtn) nextBtn.addEventListener('click', () => { state.logWeekOffset = Math.min(0, (state.logWeekOffset || 0) + 1); render(); });
 }
 
 function attachPlanListeners(plans){
