@@ -95,6 +95,7 @@
   }
   .tab.active.training{ background: var(--rust); color:#fff; }
   .tab.active.diet{ background: var(--sage); color:#fff; }
+  .tab.active.chart{ background: var(--amber); color:#fff; }
 
   .stats-row{
     display:grid; grid-template-columns: 1fr 1fr; gap:8px;
@@ -384,6 +385,7 @@
   <div class="tabs">
     <div class="tab training active" data-tab="training">Træning</div>
     <div class="tab diet" data-tab="diet">Kost</div>
+    <div class="tab chart" data-tab="chart">Diagram</div>
   </div>
 
   <div class="stats-row" id="statsRow"></div>
@@ -750,6 +752,81 @@ function barChart(data, color, opts){
   return `<div class="chart-wrap"><svg width="100%" viewBox="0 0 ${maxW} ${h}" style="overflow:visible; display:block;">${bars}</svg></div>`;
 }
 
+// Simple progression line chart: data = [{label, value}], values numeric.
+function lineChart(data, color){
+  const w = 264, h = 96, padX = 10, padY = 16;
+  const values = data.map(d => parseFloat(d.value) || 0);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = (max - min) || 1;
+  const stepX = data.length > 1 ? (w - padX * 2) / (data.length - 1) : 0;
+  const points = data.map((d, i) => {
+    const x = padX + i * stepX;
+    const y = (h - padY) - ((parseFloat(d.value) - min) / range) * (h - padY * 2);
+    return { x, y, label: d.label, value: d.value };
+  });
+  const pathD = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ');
+  const dots = points.map((p, i) =>
+    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${i === points.length - 1 ? 4 : 2.5}" fill="${color}"/>`
+  ).join('');
+  const showEvery = points.length <= 5 ? 1 : Math.ceil(points.length / 5);
+  const labels = points.map((p, i) => {
+    if(i % showEvery !== 0 && i !== points.length - 1) return '';
+    return `<text x="${p.x.toFixed(1)}" y="${h - 2}" font-size="9" fill="#6B6A63" text-anchor="middle">${escapeHtml(p.label)}</text>`;
+  }).join('');
+  return `<div class="chart-wrap"><svg width="100%" viewBox="0 0 ${w} ${h}" style="overflow:visible; display:block;">
+    <path d="${pathD}" fill="none" stroke="${color}" stroke-width="2"/>${dots}${labels}
+  </svg></div>`;
+}
+
+function renderChartTab(main){
+  const key = state.activeProfile;
+  const plans = state.plans.filter(p => p.type === 'training' && p.owner === key);
+  const exercises = [];
+  plans.forEach(plan => {
+    plan.items.forEach(it => {
+      if(it.category === 'Cardio') return;
+      if(it.weightHistory && it.weightHistory.length){
+        exercises.push({ planName: plan.name, item: it });
+      }
+    });
+  });
+
+  if(exercises.length === 0){
+    main.innerHTML = `<div class="empty">
+      <div class="plate-icon">${plateIcon}</div>
+      <p>Ingen registrerede vægte endnu. Tilføj eller ret en vægt på en øvelse i et program, så dukker udviklingen op her.</p>
+    </div>`;
+    return;
+  }
+
+  main.innerHTML = exercises.map(ex => {
+    const hist = [...ex.item.weightHistory].sort((a, b) => a.date.localeCompare(b.date));
+    const first = hist[0], last = hist[hist.length - 1];
+    const totalDiff = hist.length > 1 ? Math.round((parseFloat(last.weight) - parseFloat(first.weight)) * 10) / 10 : 0;
+    const deltaCls = totalDiff > 0 ? 'delta-up' : (totalDiff < 0 ? 'delta-down' : '');
+    const deltaHtml = hist.length > 1 && totalDiff !== 0
+      ? `<span class="${deltaCls}"> (${totalDiff > 0 ? '+' : ''}${totalDiff} kg siden ${fmtShortDate(first.date)})</span>`
+      : '';
+    const chartData = hist.map(h => ({ label: fmtShortDate(h.date), value: h.weight }));
+    const chart = hist.length > 1
+      ? lineChart(chartData, '#A6742B')
+      : `<div class="hint" style="margin:8px 0 2px;">Kun én registrering endnu (${escapeHtml(last.weight)} kg). Ret vægten igen en anden dag for at se udviklingen.</div>`;
+
+    return `
+      <div class="plan-card recipes">
+        <div class="row">
+          <div>
+            <h3>${escapeHtml(ex.item.name)}</h3>
+            <div class="meta">${escapeHtml(ex.planName)} · Nu: ${escapeHtml(last.weight)} kg${deltaHtml}</div>
+          </div>
+        </div>
+        <div class="stripe recipes"></div>
+        ${chart}
+      </div>`;
+  }).join('');
+}
+
 function trainingChart(plan){
   const counts = {};
   plan.items.forEach(it=>{
@@ -825,6 +902,8 @@ function render(){
   const main = document.getElementById('main');
   if(state.tab === 'training'){
     renderTrainingTab(main);
+  } else if(state.tab === 'chart'){
+    renderChartTab(main);
   } else {
     renderDietTab(main);
   }
@@ -841,7 +920,7 @@ function renderStats(){
   const weight = state.profiles[state.activeProfile].weight;
   const burnTotal = plans.reduce((s,p)=> s + computePlanBurn(p, weight), 0);
   row.innerHTML = `
-    <div class="stat-card training"><div class="num">${planCount}</div><div class="lbl">${state.trainingProgramFilter==='Alle'?'Planer i alt':'Valgt plan'}</div></div>
+    <div class="stat-card training"><div class="num">${planCount}</div><div class="lbl">${state.trainingProgramFilter==='Alle'?'Programmer i alt':'Valgt program'}</div></div>
     <div class="stat-card training"><div class="num">${exerciseCount}</div><div class="lbl">Øvelser</div></div>
     <div class="stat-card training"><div class="num">${burnTotal}</div><div class="lbl">Kcal forbrændt</div></div>
   `;
@@ -978,7 +1057,7 @@ function openLogEntrySheet(dateISO){
       ${existingActionsHtml}
       ${weightEditorHtml()}
       ${plans.length ? '<div class="hint" style="margin: 14px 0 8px;">Vælg en eller flere planer, I trænede:</div>' + planListHtml : ''}
-      <button class="add-plan-row training" id="logCreatePlanBtn">+ Opret ny plan</button>
+      <button class="add-plan-row training" id="logCreatePlanBtn">+ Opret nyt program</button>
       <div class="hint" style="margin: 14px 0 6px;">${customHint}</div>
       <input id="logCustomLabel" placeholder="fx Løbetur">
       <div class="hint" style="margin: 14px 0 6px;">Tilføj en øvelse kun for denne dag (gemmes ikke i en fast plan):</div>
@@ -1046,11 +1125,11 @@ function openLogEntrySheet(dateISO){
         const plan = state.plans.find(p => p.id === row.dataset.planId);
         const item = plan && plan.items.find(it => it.id === row.dataset.itemId);
         if(!item) return;
-        item.weight = val;
         if(!item.weightHistory) item.weightHistory = [];
         const idx = item.weightHistory.findIndex(h => h.date === dateISO);
         if(idx >= 0) item.weightHistory[idx].weight = val;
         else item.weightHistory.push({ date: dateISO, weight: val });
+        refreshCurrentWeight(item);
         changed = true;
       });
       if(changed) savePlans();
@@ -1159,7 +1238,7 @@ function renderTrainingTab(main){
   let html = trainingLogCardHtml() + programTabsHtml(all);
 
   if(all.length === 0){
-    html += emptyStateHtml(`Ingen træningsplaner endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette den første.`, 'training');
+    html += emptyStateHtml(`Ingen programmer endnu for ${state.profiles[state.activeProfile].label.toLowerCase()}. Tryk på + for at oprette det første.`, 'training');
     main.innerHTML = html;
     attachEmptyAddButton();
     main.querySelectorAll('.day-tabs-wrap .cat-tab').forEach(el => {
@@ -1170,7 +1249,7 @@ function renderTrainingTab(main){
 
   if(state.trainingProgramFilter !== 'Alle'){
     const plan = all.find(p => p.id === state.trainingProgramFilter);
-    html += planCardHtml(plan) + addPlanRowHtml('training', 'Ny plan');
+    html += planCardHtml(plan) + addPlanRowHtml('training', 'Nyt program');
     main.innerHTML = html;
     attachPlanListeners([plan]);
   } else {
@@ -1185,7 +1264,7 @@ function renderTrainingTab(main){
     if(unassigned.length){
       body += `<div class="day-heading">Ikke tildelt</div>` + unassigned.map(p => planCardHtml(p)).join('');
     }
-    body += addPlanRowHtml('training', 'Ny plan');
+    body += addPlanRowHtml('training', 'Nyt program');
     main.innerHTML = html + body;
     attachPlanListeners(all);
   }
@@ -1529,6 +1608,12 @@ function addItem(planId, nameInput, detailInput, category, weightInput){
   render();
 }
 
+function refreshCurrentWeight(item){
+  if(!item.weightHistory || !item.weightHistory.length) return;
+  const sorted = [...item.weightHistory].sort((a, b) => a.date.localeCompare(b.date));
+  item.weight = sorted[sorted.length - 1].weight;
+}
+
 function openEditItemSheet(planId, itemId){
   const plan = state.plans.find(p => p.id === planId);
   const item = plan.items.find(it => it.id === itemId);
@@ -1565,12 +1650,12 @@ function openEditItemSheet(planId, itemId){
     const weightVal = document.getElementById('editItemWeight').value.trim();
     item.detail = detail;
     if(weightVal){
-      item.weight = weightVal;
       if(!item.weightHistory) item.weightHistory = [];
       const today = todayISO();
       const idx = item.weightHistory.findIndex(h => h.date === today);
       if(idx >= 0) item.weightHistory[idx].weight = weightVal;
       else item.weightHistory.push({ date: today, weight: weightVal });
+      refreshCurrentWeight(item);
     }
     savePlans();
     backdrop.remove();
@@ -1618,14 +1703,14 @@ function openNewPlanSheet(presetDay, onDone){
 
   backdrop.innerHTML = `
     <div class="sheet">
-      <h4>Ny ${tab === 'training' ? 'træningsplan' : 'kostplan'} — ${escapeHtml(state.profiles[state.activeProfile].label)}</h4>
+      <h4>${tab === 'training' ? 'Nyt program' : 'Ny kostplan'} — ${escapeHtml(state.profiles[state.activeProfile].label)}</h4>
       <input id="newPlanName" placeholder="${tab === 'training' ? 'fx Overkrop A' : 'fx Hverdagsmenu'}">
       <div class="err" id="newPlanErr">Skriv et navn til planen først.</div>
       ${dayPickerHtml}
       ${sharedPickerHtml}
       <div class="actions">
         <button class="cancel" id="cancelSheet">Annuller</button>
-        <button class="confirm ${tab}" id="confirmSheet">Opret plan</button>
+        <button class="confirm ${tab}" id="confirmSheet">${tab === 'training' ? 'Opret program' : 'Opret plan'}</button>
       </div>
     </div>`;
   document.body.appendChild(backdrop);
