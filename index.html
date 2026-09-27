@@ -145,6 +145,8 @@
   .cat-tab.recipes.active{ background: var(--amber); color:#fff; }
   .seg-wrap .cat-tab{ flex:1; text-align:center; }
 
+  .item-line.current-week{ border-left:3px solid var(--rust); padding-left:8px; }
+  .item-line.current-week .name{ font-weight:700; }
   .day-tabs-wrap{ margin: 0 20px 4px; }
   .log-card{
     background: var(--paper); border:1px solid var(--line); border-radius: var(--radius);
@@ -615,6 +617,55 @@ if(cloudEnabled){
   onSnapshot(cloudDocRef, () => { loadPlans(); });
 }
 
+
+// ---------- Løbeprogram: 2 km på 12 min (4 uger, lægges ind én gang) ----------
+const RUN2K_SEED_ID = 'run2k-2026-09';
+const RUN2K_START = '2026-09-28'; // mandag i uge 1
+function run2kItem(week, name, detail, minutes, intensity){
+  return { id: uid(), name: `Uge ${week} · ${name}`, detail: `${detail} · ${minutes} min`, category: 'Cardio', minutes, intensity, week };
+}
+function buildRun2kPlans(owner){
+  const base = { type: 'training', owner, seedId: RUN2K_SEED_ID, startDate: RUN2K_START };
+  return [
+    Object.assign({ id: uid(), name: '2 km · Intervaller', day: 'Mandag', items: [
+      run2kItem(1, '8 × 200 m', '1:10 pr. 200 m (≈5:50/km), 90 sek gang/jog imellem', 35, 'Hård'),
+      run2kItem(2, '6 × 400 m', '2:20 pr. 400 m, 90 sek pause', 35, 'Hård'),
+      run2kItem(3, '4 × 500 m', '2:55 pr. 500 m, 2 min pause', 35, 'Hård'),
+      run2kItem(4, '2 × 1 km', '6:00 pr. km, 3 min pause', 35, 'Hård')
+    ]}, base),
+    Object.assign({ id: uid(), name: '2 km · Tempo', day: 'Onsdag', items: [
+      run2kItem(1, 'Tempotur 12 min', 'ca. 7:00/km, komfortabelt hårdt', 27, 'Moderat'),
+      run2kItem(2, 'Tempotur 15 min', 'ca. 6:50/km', 30, 'Moderat'),
+      run2kItem(3, '3 × 5 min tempo', 'ca. 6:30/km, 2 min jog imellem', 34, 'Hård'),
+      run2kItem(4, 'Let + 3 × 1 min', '10 min let, så 3 × 1 min i måltempo (6:00/km)', 25, 'Moderat')
+    ]}, base),
+    Object.assign({ id: uid(), name: '2 km · Rolig / test', day: 'Lørdag', items: [
+      run2kItem(1, 'Rolig tur 20 min', 'så langsomt at du kan snakke', 25, 'Let'),
+      run2kItem(2, 'TEST: 12 min', 'løb så langt du kan på 12 min – mål ≈1,8 km', 27, 'Hård'),
+      run2kItem(3, 'Rolig tur 25–30 min', 'snaketempo', 35, 'Let'),
+      run2kItem(4, 'SLUTTEST: 2 km', '3:00 pr. 500 m, gas på sidste 400 m. Hvil 2 dage før', 27, 'Hård')
+    ]}, base)
+  ];
+}
+// Hvilken uge (1-4) programmet er i lige nu; null før start / efter slut.
+function run2kCurrentWeek(plan){
+  if(!plan || !plan.startDate) return null;
+  const start = new Date(plan.startDate + 'T00:00:00');
+  const days = Math.floor((new Date() - start) / 86400000);
+  const week = Math.floor(days / 7) + 1;
+  return (week >= 1 && week <= 4) ? week : null;
+}
+async function seedRun2kProgram(){
+  if(state.plans.some(p => p.seedId === RUN2K_SEED_ID)) return false;
+  let seeds = {};
+  try{ const r = await store.get('seeds'); if(r && r.value) seeds = JSON.parse(r.value); }catch(e){}
+  if(seeds[RUN2K_SEED_ID]) return false; // allerede lagt ind (og evt. slettet bevidst)
+  seeds[RUN2K_SEED_ID] = true;
+  try{ await store.set('seeds', JSON.stringify(seeds)); }catch(e){}
+  state.plans.push(...buildRun2kPlans('p1'));
+  return true;
+}
+
 async function loadPlans(){
   try{
     const res = await store.get('plans');
@@ -662,6 +713,8 @@ async function loadPlans(){
       typeof e === 'string' ? { date: e, label: 'Trænet' } : e
     );
   });
+
+  if(await seedRun2kProgram()) migrated = true;
 
   if(migrated) savePlans();
   render();
@@ -859,7 +912,9 @@ function parseCardioMinutes(detail){
 }
 function computePlanBurn(plan, weight){
   let total = 0;
+  const curWeek = plan.startDate ? run2kCurrentWeek(plan) : undefined;
   plan.items.forEach(it => {
+    if(it.week != null && curWeek !== undefined && it.week !== curWeek) return; // kun denne uges tur tæller
     if(it.category === 'Cardio'){
       const minutes = (it.minutes != null) ? it.minutes : parseCardioMinutes(it.detail);
       total += minutes * cardioRatePerMin(weight, it.intensity);
@@ -1552,7 +1607,7 @@ function planCardHtml(p){
           detailText = it.detail ? escapeHtml(it.detail) + ' kcal' : '';
         }
         return `
-      <div class="item-line">
+      <div class="item-line${(it.week != null && it.week === run2kCurrentWeek(p)) ? ' current-week' : ''}">
         <div class="${isTraining ? 'item-line-text' : ''}" ${isTraining ? `data-edit-item="${it.id}" data-edit-plan="${p.id}"` : ''}>
           <div class="name">${escapeHtml(it.name)}</div>
           <div class="detail">${detailText}</div>
@@ -1575,7 +1630,7 @@ function planCardHtml(p){
       <div class="row">
         <div>
           <h3>${escapeHtml(p.name)}</h3>
-          <div class="meta">${p.items.length} ${isTraining ? (p.items.length===1?'øvelse':'øvelser') : (p.items.length===1?'måltid':'måltider')}${burnText}</div>
+          <div class="meta">${p.items.length} ${isTraining ? (p.items.length===1?'øvelse':'øvelser') : (p.items.length===1?'måltid':'måltider')}${burnText}${p.startDate ? (run2kCurrentWeek(p) ? ' · Denne uge: uge ' + run2kCurrentWeek(p) : (new Date() < new Date(p.startDate + 'T00:00:00') ? ' · Starter ' + new Date(p.startDate + 'T00:00:00').toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }) : ' · Afsluttet')) : ''}</div>
           ${dayBadgeHtml}
         </div>
         <button class="icon-btn del del-plan-${p.id}" aria-label="Slet plan">✕</button>
